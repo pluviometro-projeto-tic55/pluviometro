@@ -1,0 +1,52 @@
+.theme-switcher {
+  position: relative;
+  width: 70px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.theme-switcher {
+  background: var(--btn-theme);
+}
+
+.theme-label {
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.theme-handle {
+  position: absolute;
+  right: 4px;
+  width: 30px;
+  height: 30px;
+  background: var(--btn-theme-icon);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.theme-switcher.light .theme-handle {
+  transform: translateX(0);
+}
+
+.theme-switcher.dark .theme-handle {
+  transform: translateX(-34px);
+}
+
+.theme-switcher.light .theme-label {
+  transform: translateX(0);
+}
+
+.theme-switcher.dark .theme-label {
+  transform: translateX(32px);
+}

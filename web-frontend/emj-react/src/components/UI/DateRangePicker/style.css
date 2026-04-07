@@ -1,0 +1,161 @@
+.date-picker-wrapper {
+  position: relative;
+}
+
+/* Input */
+.date-input {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.date-input *,
+.date-input .calendar-icon {
+  color: #000000 !important;
+}
+
+.date-input:focus,
+.date-input:active,
+.date-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.date-input:hover {
+  background-color: #ffffff !important;
+}
+
+/* Calendário */
+.calendar {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  width: 300px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  z-index: 20;
+}
+
+/* Header */
+.calendar-header {
+  display: flex;
+  justify-content: center;   
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  
+}
+
+.calendar-header select {
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+}
+
+/* Dias da semana */
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 6px;
+  color: #000;
+}
+
+/* Dias */
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.day:hover {
+  background-color: #f4f4f4 !important;
+}
+
+.day.range {
+  background-color: #eaeaea !important;
+  color: #000000 !important;
+}
+
+.day.start,
+.day.end {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.day.start:hover,
+.day.end:hover,
+.day.start:focus,
+.day.end:focus,
+.day.start:active,
+.day.end:active {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Rodapé */
+.calendar-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.clear-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.clear-btn:hover {
+  background: #f2f2f2;
+}
+
+.ok-btn {
+  background: #fff;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.ok-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

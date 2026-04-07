@@ -1,0 +1,37 @@
+.footer {
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding:  8px 24px 0 24px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-partner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* Responsividade */
+@media (max-width: 764px) {
+  .footer-container {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .footer-partner {
+    flex-direction: column;
+    gap: 6px;
+  }
+}

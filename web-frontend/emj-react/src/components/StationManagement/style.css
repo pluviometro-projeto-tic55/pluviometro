@@ -1,0 +1,306 @@
+.management-wrapper {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 100vh;
+  height: 100%;
+
+  background: var(--color-surface);
+
+  border-radius: 16px;
+
+  border: 1px solid var(--color-border);
+
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  overflow: hidden;
+}
+
+/* Header */
+
+.management-header {
+  padding: 1.5rem 2rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.management-header h1 {
+  font-size: 1.4rem;
+
+  font-weight: 500;
+
+  color: var(--text-900);
+
+  margin: 0;
+}
+
+.station-content {
+  display: flex;
+  flex: 1;
+}
+
+/* Sidebar */
+
+.sidebar {
+  width: 380px;
+
+  background: var(--color-surface);
+
+  border-right: 1px solid var(--color-border);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  padding: 1.5rem;
+
+  font-size: 1.1rem;
+
+  color: var(--text-800);
+}
+
+.list-scroll {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 0 1rem;
+}
+
+/* Cards */
+
+.station-card {
+  background: var(--color-surface);
+
+  border: 1px solid var(--color-border);
+
+  border-radius: 10px;
+
+  padding: 1.2rem;
+
+  margin-bottom: 1rem;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.station-card:hover {
+  background: var(--card-hover);
+}
+
+.station-card:active {
+  transform: scale(0.98);
+}
+
+.station-card.active-card {
+  border: 1.5px solid #2563eb;
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.station-card h4 {
+  margin: 0 0 8px 0;
+
+  color: var(--text-800);
+}
+
+.card-coords {
+  display: flex;
+  align-items: center;
+
+  font-size: 0.95rem;
+
+  color: var(--text-600);
+}
+
+/* Mapa */
+
+.map-area {
+  flex: 1;
+
+  position: relative;
+
+  background-color: #f0f2f5;
+}
+
+/* Botão ver mais */
+
+.btn-ver-mais {
+  margin-top: 10px;
+
+  background: none;
+  border: none;
+
+  color: #2563eb;
+
+  font-size: 0.9rem;
+
+  cursor: pointer;
+
+  padding: 0;
+}
+
+.btn-ver-mais:hover {
+  text-decoration: underline;
+}
+
+/* Header do modal */
+
+.modal-header {
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
+
+  color: white;
+
+  padding: 1.5rem 2rem;
+
+  border-bottom: none;
+}
+
+.modal-header-inner {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.modal-header-inner div:first-child {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.modal-header-inner div:last-child {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.modal-header button svg {
+  stroke: white !important;
+}
+
+/* Body do modal */
+
+.station-modal-body {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+  padding-top: 10px;
+}
+
+.station-modal-body p {
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.station-modal-body label {
+  font-size: 0.85rem;
+
+  font-weight: 500;
+
+  margin-top: 4px;
+}
+
+.station-modal-body input {
+  height: 44px;
+
+  border-radius: 10px;
+
+  padding: 0 12px;
+
+  font-size: 0.95rem;
+
+  border: 1px solid #cbd5e1;
+
+  background: white;
+
+  transition:
+    border 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.station-modal-body input:focus {
+  outline: none;
+
+  border-color: #2563eb;
+
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Links */
+
+.modal-link {
+  font-size: 0.85rem;
+
+  color: #2563eb;
+
+  text-align: center;
+
+  margin-top: 6px;
+}
+
+.modal-link:hover {
+  text-decoration: underline;
+}
+
+/* Botões */
+
+.btn-cancelar {
+  padding: 8px 16px;
+
+  border-radius: 6px;
+
+  background: white;
+
+  border: 1px solid #cbd5e1;
+
+  color: #334155;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.btn-cancelar:hover {
+  background: #f1f5f9;
+}
+
+.btn-entrar {
+  padding: 8px 20px;
+
+  border-radius: 6px;
+
+  background: #2563eb;
+
+  color: white;
+
+  border: none;
+
+  font-weight: 500;
+
+  min-width: 120px;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.btn-entrar:hover {
+  background: #1d4ed8;
+}
+
+/* Acessibilidade */
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}

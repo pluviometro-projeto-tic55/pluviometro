@@ -1,0 +1,309 @@
+@import "tailwindcss";
+
+@theme {
+  --breakpoint-3xl: 112rem; /* 1792px */
+  --breakpoint-4xl: 120rem; /* 1920px */
+}
+
+/* Tema escuro */
+:root[data-theme="dark"] {
+  --text-900: #ffffff;
+  --text-800: #e2e8f0;
+  --text-700: #94a3b8;
+  --text-600: #94a3b8;
+  --text-500: #a2c147;
+  --text-400: #42a5f5;
+  --text-300: #f1f5f9;
+  --text-200: #d8eafe;
+
+  --text-blue: #81beff;
+  --text-red: #ffadad;
+
+  --color-bg: #020617;
+  --color-surface: #1e293b;
+  --color-border: #334155;
+
+  --bg-200: #0f172b;
+  --border-color:  #1d293d;
+  --border-dashed-color: #374151;
+
+  /* Button Primary */
+  --btn-primary-bg: #1e293b;
+  --btn-primary-border: #334155;
+
+  --btn-primary-text-hover: #60a5fa;
+  --btn-primary-bg-hover: #1e3b8a30;
+  --btn-primary-border-hover: #1d4ed8;
+
+  /* Button Secondary */
+  --btn-secondary-bg: #1e293b;
+  --btn-secondary-border: #334155;
+
+  --btn-secondary-bg-hover: #1e293b;
+  --btn-secondary-border-hover: #42a5f5;
+
+  --btn-secondary-text-active: #475569;
+  --btn-secondary-bg-active: #eeeeee;
+  --btn-secondary-border-active: #cfcfcf;
+
+  /* Button Tertiary */
+  --btn-tertiary-bg: #1e293b;
+  --btn-tertiary-border: #334155;
+
+  --btn-tertiary-bg-hover: #1e293b;
+  --btn-tertiary-border-hover: #42a5f5;
+
+  --btn-tertiary-bg-active: #2563eb;
+  --btn-tertiary-border-active: #2563eb;
+
+  --btn-theme: #051826;
+  --btn-theme-icon: #158fed;
+
+  --btn-close-bg-hover: rgba(255, 255, 255, 0.1);
+
+  /* Export Button */
+  --btn-export-bg: #2563eb;
+  --btn-export-bg-hover: #1d4ed8;
+
+  --btn-export-border: #2563eb;
+  --btn-export-border-hover: #1d4ed8;
+
+  --btn-export-text: #ffffff;
+
+  --btn-export-bg-disabled: #93c5fd;
+  --btn-export-border-disabled: #93c5fd;
+  --btn-export-text-disabled: #e5e7eb;
+
+  --btn-export-focus: #60a5fa;
+
+  /* Chart */
+  --chart-grid: #314158;
+  --chart-axis: #94a3b8;
+
+  /* Table */
+  --table-header-bg: #1e293b;
+  --table-row-odd: #020617;
+  --table-row-even: #020617;
+  --table-hover: #53535342;
+
+  /* Dropdown */
+  --dropdown-bg: #1e293b;
+  --dropdown-border: #334155;
+  --dropdown-text: #94a3b8;
+
+  --dropdown-bg-hover: #1e293b;
+  --dropdown-border-hover: #1d4ed8;
+
+  --dropdown-menu-bg: #1e293b;
+  --dropdown-menu-border: #334155;
+  --dropdown-item-hover: #3e4f66d7;
+
+  --dropdown-icon-arrow: #94a3b8;
+  --dropdown-icon: #3b82f6;
+
+  --color-filters-bg: #0f172a;
+
+  --variation-low-bg: #10292b;
+  --variation-low-text: #46d07a;
+
+  --variation-medium-bg: #2e2022;
+  --variation-medium-text: #e3ad23;
+
+  --info-bg: #121e3e;
+  --info-border: #1e40af;
+  --info-text: #93c5fd;
+  --info-icon: #93c5fd;
+
+  --skeleton-base: #374151;
+  --skeleton-highlight: #4b5563;
+
+  --card-hover: #253349;
+}
+
+/* Tema claro */
+:root[data-theme="light"] {
+  --text-900: #003770;
+  --text-800: #334155;
+  --text-700: #475569;
+  --text-600: #1e2938;
+  --text-500: #2581c4;
+  --text-400: #475569;
+  --text-300: #d7d9dc;
+  --text-200: #d8eafe;
+
+  --text-blue: #044196;
+  --text-red: #a21b1b;
+
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-border: #f1f5f9;
+
+  --bg-200: #f8fafc;
+  --border-color:  #f1f5f9 ;
+  --border-dashed-color: #e5e7eb;
+
+  /* Button Primary */
+  --btn-primary-bg: #ffffff;
+  --btn-primary-border: #e2e8f0;
+
+  --btn-primary-text-hover: #2563eb;
+  --btn-primary-bg-hover: #eff6ff;
+  --btn-primary-border-hover: #bfdbfe;
+
+  /* Button Secondary */
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-border: #e2e8f0;
+
+  --btn-secondary-bg-hover: #eeeeee;
+  --btn-secondary-border-hover: #cfcfcf;
+
+  --btn-secondary-text-active: #ffffff;
+  --btn-secondary-bg-active: #1e293b;
+  --btn-secondary-border-active: #1e293b;
+
+  /* Button Tertiary */
+  --btn-tertiary-bg: #f8fafc;
+  --btn-tertiary-border: #e2e8f0;
+
+  --btn-tertiary-bg-hover: #f8fafc;
+  --btn-tertiary-border-hover: #42a5f5;
+
+  --btn-tertiary-bg-active: #2563eb;
+  --btn-tertiary-border-active: #2563eb;
+
+  --btn-theme: #f7df8e;
+  --btn-theme-icon: #fbbf24;
+
+  --btn-close-bg-hover: rgb(228, 228, 228);
+
+  /* Export Button */
+  --btn-export-bg: #2563eb;
+  --btn-export-bg-hover: #1d4ed8;
+
+  --btn-export-border: #2563eb;
+  --btn-export-border-hover: #1d4ed8;
+
+  --btn-export-text: #ffffff;
+
+  --btn-export-bg-disabled: #93c5fd;
+  --btn-export-border-disabled: #93c5fd;
+  --btn-export-text-disabled: #e5e7eb;
+
+  --btn-export-focus: #60a5fa;
+
+  /* Chart */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #94a3b8;
+
+  /* Table */
+  --table-header-bg: #f1f1f1;
+  --table-row-odd: #ffffff;
+  --table-row-even: #ffffff;
+  --table-hover: #dcdcdc80;
+
+  /* Dropdown */
+  --dropdown-bg: #ffffff;
+  --dropdown-border: #e2e8f0;
+  --dropdown-text: #334155;
+
+  --dropdown-bg-hover: #ffffff;
+  --dropdown-border-hover: #60a5fa;
+
+  --dropdown-menu-bg: #ffffff;
+  --dropdown-menu-border: #e2e8f0;
+  --dropdown-item-hover: #e2e4e8;
+
+  --dropdown-icon-arrow: #94a3b8;
+  --dropdown-icon: #3b82f6;
+
+  --color-filters-bg: #f8fafc;
+
+  --variation-low-bg: #dcfce7;
+  --variation-low-text: #0b601d;
+
+  --variation-medium-bg: #fef3c7;
+  --variation-medium-text: #91301a;
+
+  --info-bg: #eff6ff;
+  --info-border: #dbeafe;
+  --info-text: #1e40af;
+  --info-icon: #1e40af;
+
+  --skeleton-base: #e5e7eb;
+  --skeleton-highlight: #f3f4f6;
+
+  --card-hover: #f8fafc;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: "Montserrat", sans-serif;
+}
+
+.content-page {
+  padding: 0.875rem 6.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row-page {
+  display: grid;
+  grid-template-columns: 4fr 3fr;
+  gap: 24px;
+}
+
+.bg-primary-secondary-gradient {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(37 129 196 / 0.9),
+    rgb(162 193 71 / 0.8)
+  );
+}
+
+@media (max-width: 1200px) and (min-width: 764px) {
+  .row-page {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 764px) {
+  .row-page {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .content-page {
+    padding: 2rem 3.75rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .content-page {
+    padding: 1.75rem 2.5rem;
+  }
+}
+
+@media (max-width: 764px) {
+  .content-page {
+    padding: 1.25rem;
+  }
+}
+
+.station-management-wrapper {
+  margin-top: 2rem;
+}

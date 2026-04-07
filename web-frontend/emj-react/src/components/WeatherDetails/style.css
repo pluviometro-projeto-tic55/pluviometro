@@ -1,0 +1,24 @@
+.weather-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  flex: 1;
+}
+
+@media (max-width: 1200px) and (min-width: 984px) {
+  .weather-details-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 984px) and (min-width: 764px) {
+  .weather-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 764px) {
+  .weather-details-grid {
+    grid-template-columns: none;
+  }
+}
