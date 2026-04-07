@@ -1,0 +1,16 @@
+[Unit]
+Description=Registrar dispositivo no servidor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/restic55/.config/station/registry_v01.py
+User=restic55
+Group=root
+WorkingDirectory=/home/restic55/.config/station/
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

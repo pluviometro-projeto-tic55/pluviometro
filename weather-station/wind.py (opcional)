@@ -1,0 +1,44 @@
+from gpiozero import Button
+import time
+import math
+
+cm_in_km = 100000.0
+sec_in_hour = 3600
+wind_count = 0
+radius_cm = raio # definir o raio do anemometro
+wind_interval = y # definir a frequência em segundos
+adjustment = z # definir margem de erro para ajustar o anemometro
+
+def spin():
+    global wind_count
+    wind_count = wind_count + 1
+    # print("spin" + str(wind_count))
+
+# Calcular a velocidade do vento
+def calculate_speed(time_sec):
+    global wind_count
+    circumference_cm = (2 * math.pi) * radius_cm
+    rotations = wind_count / 2.0
+
+    dist_km = (circumference_cm * rotations) / cm_in_km
+    km_per_sec = dist_km / time_sec
+    km_per_hour = km_per_sec * sec_in_hour
+
+    return km_per_hour # * adjustment
+
+def reset_wind():
+    global wind_count
+    wind_count = 0
+
+windspeed_sensor = Button(5)
+windspeed_sensor.when_pressed = spin
+
+
+while True:
+    wind_count = 0
+    time.sleep(wind_interval)
+    current_speed = calculate_speed(wind_interval)
+
+# Ver o resultado no console:
+   # print(f"Velocidade do Vento: {current_speed:.2f} km/h")
+
