@@ -23,7 +23,8 @@ def broadcast_weather_data(app):
             if data:
 
                 socketio.emit(f'update_weather_{rc_id}', data)
-                print(f"Broadcasted data for station {rc_id}") #teste
+                print(f"Broadcasted data for station {rc_id}")
+                print(data)#teste
 
 # gera a previsão e envia via socket
 def broadcast_forecast_data(app):
