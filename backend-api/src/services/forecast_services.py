@@ -236,7 +236,9 @@ def get_station_data_by_id(rc_id):
     response_details = {
         "rdID": data_details.rdID,
         "rcID": data_details.rcID,
-        "timestamp": data_details.timestamp.isoformat(),
+        "timestamp": data_details.timestamp.replace(
+    tzinfo=timezone.utc
+).astimezone().isoformat(),
         "last_update": int(
     (datetime.now(timezone.utc) - data_details.timestamp.replace(tzinfo=timezone.utc))
     .total_seconds() / 60
