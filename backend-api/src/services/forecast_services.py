@@ -233,9 +233,14 @@ def get_station_data_by_id(rc_id):
     past_pressure = get_pressure_3_hours_ago(data_details.rcID)
     trend = calc_pressure_trend(data_details.pressure, past_pressure)
 
+    timestamp = data_details.timestamp
+
+    if timestamp.tzinfo is None:
+    timestamp = timestamp.replace(tzinfo=timezone.utc)
+
     last_update_minutes = int(
-        (datetime.now(timezone.utc) - data_details.timestamp).total_seconds() / 60
-    )
+    (datetime.now(timezone.utc) - timestamp).total_seconds() / 60
+     )
 
     response_details = {
         "rdID": data_details.rdID,
