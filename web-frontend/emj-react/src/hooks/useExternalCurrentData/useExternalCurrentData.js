@@ -7,8 +7,9 @@ export function useExternalCurrentData(stationId) {
   const { request, loading, error } = useApi();
 
   useEffect(() => {
-    if (!stationId) return;
+  if (!stationId) return;
 
+  const fetchData = () => {
     request({
       method: "get",
       url: `/api/stations/${stationId}/external/current`,
@@ -25,7 +26,17 @@ export function useExternalCurrentData(stationId) {
           );
         }
       });
-  }, [stationId, request]);
+  };
 
+  // chama uma vez ao abrir
+  fetchData();
+
+  //chama a cada 5 minutos
+  const interval = setInterval(fetchData, 300000);
+
+  // limpa quando sair da tela
+  return () => clearInterval(interval);
+
+}, [stationId, request]);
   return { data, loading, error };
 }
