@@ -231,9 +231,9 @@ def get_station_data_by_id(rc_id):
         return None
 
     past_pressure = get_pressure_3_hours_ago(data_details.rcID)
-    trend = calc_pressure_trend(data_details.pressure, past_pressure)
+trend = calc_pressure_trend(data_details.pressure, past_pressure)
 
-    last_update_minutes = int(
+last_update_minutes = int(
     (datetime.now() - data_details.timestamp).total_seconds() / 60
 )
 
@@ -242,6 +242,24 @@ response_details = {
     "rcID": data_details.rcID,
     "timestamp": data_details.timestamp.isoformat(),
     "last_update": max(last_update_minutes, 0),
+    "status": station_status.status,
+    "temperature": data_details.temp,
+    "humidity": data_details.humidity,
+    "humidity_status": classify_humidity(data_details.humidity),
+    "heat_index": calc_heat_index(data_details.temp, data_details.humidity),
+    "pressure": data_details.pressure,
+    "wind_speed": api_wind,
+    "wind_speed_status": classify_wind_status(api_wind) if api_wind is not None else None,
+    "rain_chance": api_rain,
+    "rain_chance_status": classify_rain_probability(api_rain) if api_rain is not None else None,
+    "pressure_trend": trend,
+    "pressure_trend_status": classify_pressure_trend(trend),
+    "cloudiness": calc_cloudiness(
+        data_details.lux,
+        data_details.pressure,
+        data_details.humidity
+    ),
+}
 
 response_details = {
     "rdID": data_details.rdID,
