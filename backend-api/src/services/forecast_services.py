@@ -237,7 +237,7 @@ def get_station_data_by_id(rc_id):
         (datetime.now() - data_details.timestamp).total_seconds() / 60
     )
 
-response_details = {
+    response_details = {
     "rdID": data_details.rdID,
     "rcID": data_details.rcID,
     "timestamp": data_details.timestamp.isoformat(),
