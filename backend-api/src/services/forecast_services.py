@@ -236,10 +236,10 @@ def get_station_data_by_id(rc_id):
     timestamp = data_details.timestamp
 
     if timestamp.tzinfo is None:
-    timestamp = timestamp.replace(tzinfo=timezone.utc)
+       timestamp = timestamp.replace(tzinfo=timezone.utc)
 
     last_update_minutes = int(
-    (datetime.now(timezone.utc) - timestamp).total_seconds() / 60
+        (datetime.now(timezone.utc) - timestamp).total_seconds() / 60
      )
 
     response_details = {
