@@ -39,28 +39,7 @@ function DailySummary({ weather, forecast, loading }) {
     };
   }, [forecast]);
 
-  const rawStatus = weather?.status;
-  const rawStatus = weather?.status;
-
-const normalizedStatus = String(rawStatus)
-  .trim()
-  .toLowerCase();
-
-const isOnline = [
-  true,
-  1,
-  '1',
-  'on',
-  'online',
-  'active',
-  'ativo',
-  'connected'
-].includes(
-  typeof rawStatus === 'string'
-    ? normalizedStatus
-    : rawStatus
-);
-
+  const isOnline = weather?.last_update <= 5;
   const statusColor = isOnline ? "bg-emerald-500" : "bg-red-500";
   const statusGlow = isOnline ? "shadow-[0_0_6px_rgba(16,185,129,0.5)]" : "shadow-[0_0_6px_rgba(239,68,68,0.5)]";
   
