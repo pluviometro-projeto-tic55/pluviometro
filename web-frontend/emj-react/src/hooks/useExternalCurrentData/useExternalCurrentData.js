@@ -37,6 +37,6 @@ export function useExternalCurrentData(stationId) {
   // limpa quando sair da tela
   return () => clearInterval(interval);
 
-}, [stationId, request]);
+}, [stationId]);
   return { data, loading, error };
 }
