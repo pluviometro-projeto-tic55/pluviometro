@@ -18,6 +18,7 @@ import uuid
 # LEITURA DO RCID (ID DA ESTACAO)
 # ============================================
 def get_rcid():
+
     try:
         path = os.path.expanduser("~/.config/station/rcid.txt")
 
@@ -29,7 +30,9 @@ def get_rcid():
         return None
 
 
+# ============================================
 # I2C
+# ============================================
 bus = smbus2.SMBus(1)
 
 # ============================================
@@ -40,10 +43,16 @@ HAS_BH1750 = False
 
 # BME280
 try:
+
     bme280_addr = 0x76
-    bme280.load_calibration_params(bus, bme280_addr)
+
+    bme280.load_calibration_params(
+        bus,
+        bme280_addr
+    )
 
     HAS_BME280 = True
+
     print("[OK] BME280 detectado.")
 
 except Exception:
@@ -51,20 +60,27 @@ except Exception:
 
 # BH1750
 try:
+
     bh1750_addr = 0x23
     bh1750_mode = 0x10
 
-    bus.write_byte(bh1750_addr, bh1750_mode)
+    bus.write_byte(
+        bh1750_addr,
+        bh1750_mode
+    )
 
     HAS_BH1750 = True
+
     print("[OK] BH1750 detectado.")
 
 except Exception:
     print("[AVISO] BH1750 não encontrado.")
 
-# Se nenhum sensor estiver conectado
+# nenhum sensor
 if not HAS_BME280 and not HAS_BH1750:
+
     print("ERRO CRÍTICO: Nenhum sensor detectado.")
+
     exit(1)
 
 # ============================================
@@ -76,7 +92,11 @@ def read_bme280():
         return None
 
     try:
-        data = bme280.sample(bus, bme280_addr)
+
+        data = bme280.sample(
+            bus,
+            bme280_addr
+        )
 
         return (
             data.temperature,
@@ -85,7 +105,11 @@ def read_bme280():
         )
 
     except Exception as e:
-        logging.error(f"Erro BME280: {e}")
+
+        logging.error(
+            f"Erro BME280: {e}"
+        )
+
         return None
 
 
@@ -95,6 +119,7 @@ def read_bh1750():
         return None
 
     try:
+
         data = bus.read_i2c_block_data(
             bh1750_addr,
             bh1750_mode,
@@ -106,21 +131,31 @@ def read_bh1750():
         return raw / 1.2
 
     except Exception as e:
-        logging.error(f"Erro BH1750: {e}")
+
+        logging.error(
+            f"Erro BH1750: {e}"
+        )
+
         return None
 
 # ============================================
-# FILTRO DE DADOS INVÁLIDOS
+# FILTRO DE DADOS
 # ============================================
 def is_valid(temp, hum, press, lux):
 
-    if temp is not None and (temp < -30 or temp > 70):
+    if temp is not None and (
+        temp < -30 or temp > 70
+    ):
         return False
 
-    if hum is not None and (hum < 0 or hum > 100):
+    if hum is not None and (
+        hum < 0 or hum > 100
+    ):
         return False
 
-    if press is not None and (press < 800 or press > 1200):
+    if press is not None and (
+        press < 800 or press > 1200
+    ):
         return False
 
     if lux is not None and lux < 0:
@@ -129,7 +164,7 @@ def is_valid(temp, hum, press, lux):
     return True
 
 # ============================================
-# BANCO DE DADOS
+# BANCO
 # ============================================
 DB_HOST = "DB_HOST_PLACEHOLDER"
 DB_USER = "DB_USER_PLACEHOLDER"
@@ -155,35 +190,48 @@ def main():
 
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
     logging.info("Iniciando coleta...")
 
     if rcID is None:
-        logging.error("rcID não encontrado")
+
+        logging.error(
+            "rcID não encontrado"
+        )
+
         return
 
     # ============================================
     # IP E MAC
     # ============================================
-    mac_atual = "{:012X}".format(uuid.getnode())
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    s.connect(("8.8.8.8", 80))
-
-    ip_atual = s.getsockname()[0]
-
-    s.close()
+    mac_atual = "{:012X}".format(
+        uuid.getnode()
+    )
 
     try:
+
+        s = socket.socket(
+            socket.AF_INET,
+            socket.SOCK_DGRAM
+        )
+
+        s.connect(("8.8.8.8", 80))
+
+        ip_atual = s.getsockname()[0]
+
+        s.close()
 
         conn = db_connect()
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT IP, MAC FROM raspclient WHERE rcID = %s",
+            """
+            SELECT IP, MAC
+            FROM raspclient
+            WHERE rcID = %s
+            """,
             (rcID,)
         )
 
@@ -197,22 +245,31 @@ def main():
             cursor.execute(
                 """
                 UPDATE raspclient
-                SET IP = %s, MAC = %s
+                SET IP = %s,
+                    MAC = %s
                 WHERE rcID = %s
                 """,
-                (ip_atual, mac_atual, rcID)
+                (
+                    ip_atual,
+                    mac_atual,
+                    rcID
+                )
             )
 
             conn.commit()
 
             logging.info(
-                f"IP/MAC atualizados: {ip_atual} | {mac_atual}"
+                f"IP/MAC atualizados: "
+                f"{ip_atual} | {mac_atual}"
             )
 
         conn.close()
 
     except Exception as e:
-        logging.error(f"Erro sincronização: {e}")
+
+        logging.error(
+            f"Erro sincronização: {e}"
+        )
 
     # ============================================
     # BUFFERS
@@ -222,10 +279,10 @@ def main():
     m_press = []
     m_lux = []
 
-    last_send = time.time()
-
-    # cache para evitar duplicados
+    # evita salvar repetido
     last_saved_data = None
+
+    last_send = time.time()
 
     # ============================================
     # LOOP
@@ -237,13 +294,22 @@ def main():
         lux = read_bh1750()
 
         if bme is not None:
+
             temp, hum, press = bme
 
         else:
-            temp, hum, press = None, None, None
+
+            temp = None
+            hum = None
+            press = None
 
         # validação
-        if is_valid(temp, hum, press, lux):
+        if is_valid(
+            temp,
+            hum,
+            press,
+            lux
+        ):
 
             if temp is not None:
                 m_temp.append(temp)
@@ -258,7 +324,7 @@ def main():
                 m_lux.append(lux)
 
         # ============================================
-        # ENVIO A CADA 5 MINUTOS
+        # SALVA A CADA 5 MINUTOS
         # ============================================
         if time.time() - last_send >= 300:
 
@@ -271,10 +337,25 @@ def main():
 
             if has_data:
 
-                avg_temp = round(statistics.mean(m_temp), 2) if m_temp else None
-                avg_hum = round(statistics.mean(m_hum), 2) if m_hum else None
-                avg_press = round(statistics.mean(m_press), 2) if m_press else None
-                avg_lux = round(statistics.mean(m_lux), 2) if m_lux else None
+                avg_temp = (
+                    round(statistics.mean(m_temp), 2)
+                    if m_temp else None
+                )
+
+                avg_hum = (
+                    round(statistics.mean(m_hum), 2)
+                    if m_hum else None
+                )
+
+                avg_press = (
+                    round(statistics.mean(m_press), 2)
+                    if m_press else None
+                )
+
+                avg_lux = (
+                    round(statistics.mean(m_lux), 2)
+                    if m_lux else None
+                )
 
                 current_data = (
                     avg_temp,
@@ -284,7 +365,7 @@ def main():
                 )
 
                 # ============================================
-                # EVITA DADOS DUPLICADOS
+                # EVITA DUPLICADOS
                 # ============================================
                 if last_saved_data == current_data:
 
@@ -294,17 +375,22 @@ def main():
 
                 else:
 
-                    last_saved_data = current_data
-
                     try:
 
                         conn = db_connect()
+
                         cursor = conn.cursor()
 
                         cursor.execute(
                             """
                             INSERT INTO raspdata
-                            (rcID, Temp, Humidity, Pressure, Lux)
+                            (
+                                rcID,
+                                Temp,
+                                Humidity,
+                                Pressure,
+                                Lux
+                            )
                             VALUES (%s, %s, %s, %s, %s)
                             """,
                             (
@@ -317,7 +403,11 @@ def main():
                         )
 
                         conn.commit()
+
                         conn.close()
+
+                        # salva cache SOMENTE após sucesso
+                        last_saved_data = current_data
 
                         logging.info(
                             f"Dados registrados: "
@@ -328,6 +418,7 @@ def main():
                         )
 
                     except Exception as e:
+
                         logging.error(
                             f"Erro ao inserir no banco: {e}"
                         )
