@@ -239,10 +239,15 @@ def get_station_data_by_id(rc_id):
         "timestamp": data_details.timestamp.replace(
     tzinfo=timezone.utc
 ).astimezone().isoformat(),
-        "last_update": int(
-    (datetime.now(timezone.utc) - data_details.timestamp.replace(tzinfo=timezone.utc))
-    .total_seconds() / 60
-        ),
+        last_update_minutes = int(
+    (datetime.now() - data_details.timestamp).total_seconds() / 60
+)
+
+response_details = {
+    "rdID": data_details.rdID,
+    "rcID": data_details.rcID,
+    "timestamp": data_details.timestamp.isoformat(),
+    "last_update": max(last_update_minutes, 0),
         "status": station_status.status,
         "temperature": data_details.temp,
         "humidity": data_details.humidity,
