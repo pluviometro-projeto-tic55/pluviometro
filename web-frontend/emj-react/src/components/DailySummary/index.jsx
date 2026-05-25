@@ -17,6 +17,7 @@ import { useStation } from "../../context/StationContext";
 import ComparisonModal from "./comparisionModal";
 
 function DailySummary({ weather, forecast, loading }) {
+  console.log("last_update:", weather?.last_update); //Modificação
   const { stationId } = useStation();
   const { data: externalData } = useExternalCurrentData(stationId);
 
