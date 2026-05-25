@@ -233,15 +233,15 @@ def get_station_data_by_id(rc_id):
     past_pressure = get_pressure_3_hours_ago(data_details.rcID)
     trend = calc_pressure_trend(data_details.pressure, past_pressure)
 
-    response_details = {
-        "rdID": data_details.rdID,
-        "rcID": data_details.rcID,
-        "timestamp": data_details.timestamp.replace(
-    tzinfo=timezone.utc
-).astimezone().isoformat(),
-        last_update_minutes = int(
+    last_update_minutes = int(
     (datetime.now() - data_details.timestamp).total_seconds() / 60
 )
+
+response_details = {
+    "rdID": data_details.rdID,
+    "rcID": data_details.rcID,
+    "timestamp": data_details.timestamp.isoformat(),
+    "last_update": max(last_update_minutes, 0),
 
 response_details = {
     "rdID": data_details.rdID,
