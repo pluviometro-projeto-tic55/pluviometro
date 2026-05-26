@@ -28,7 +28,8 @@ def test_get_external_weather_values_success(monkeypatch):
         },
         "forecast": {
             "forecastday": [
-                {"day": {"daily_chance_of_rain": 30}}
+                {"date": "2026-05-25", "day": {"daily_chance_of_rain": 30, "maxtemp_c": 28, "mintemp_c": 20, "avgtemp_c": 24, "condition": {"text": "Nublado", "icon": "..."}}},
+                {"date": "2026-05-26", "day": {"daily_chance_of_rain": 40, "maxtemp_c": 29, "mintemp_c": 21, "avgtemp_c": 25, "condition": {"text": "Chuva", "icon": "..."}}},
             ]
         }
     }
@@ -40,7 +41,8 @@ def test_get_external_weather_values_success(monkeypatch):
 
     result = get_external_weather_values("fake-api-key")
 
-    assert result == (1013, 25, 60, 12, 30)
+    assert result[0:5] == (1013, 25, 60, 12, 30)
+    assert len(result[5]) >= 1  # Verifica que forecast_4days está presente
 
 
 def test_get_external_weather_values_missing_fields(monkeypatch):
@@ -51,6 +53,9 @@ def test_get_external_weather_values_missing_fields(monkeypatch):
     mock_payload = {
         "current": {
             "temp_c": 22
+        },
+        "forecast": {
+            "forecastday": []
         }
     }
 
@@ -61,7 +66,8 @@ def test_get_external_weather_values_missing_fields(monkeypatch):
 
     result = get_external_weather_values("fake-api-key")
 
-    assert result == (None, 22, None, None, None)
+    assert result[0:5] == (None, 22, None, None, None)
+    assert result[5] == []  # forecast_4days vazio
 
 
 def test_get_external_weather_values_empty_forecast(monkeypatch):
@@ -87,7 +93,8 @@ def test_get_external_weather_values_empty_forecast(monkeypatch):
 
     result = get_external_weather_values("fake-api-key")
 
-    assert result == (1010, 20, 50, 10, None)
+    assert result[0:5] == (1010, 20, 50, 10, None)
+    assert result[5] == []
 
 
 def test_get_external_weather_values_http_error(monkeypatch):

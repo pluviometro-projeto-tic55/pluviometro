@@ -1,0 +1,148 @@
+.forecast-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.forecast-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.forecast-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.forecast-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-600);
+  text-transform: uppercase;
+}
+
+.forecast-temps {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: space-between;
+}
+
+.temp-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.temp-item.max {
+  color: var(--text-red);
+}
+
+.temp-item.min {
+  color: var(--text-blue);
+}
+
+.temp-label {
+  font-size: 0.7rem;
+  color: var(--text-600);
+  font-weight: 500;
+}
+
+.temp-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.forecast-condition {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.condition-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.condition-text {
+  font-size: 0.8rem;
+  color: var(--text-600);
+  line-height: 1.3;
+  min-height: 1.6rem;
+}
+
+.forecast-header {
+  padding: 0 1.5rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.forecast-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-900);
+  margin: 0;
+}
+
+.forecast-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-600);
+}
+
+.forecast-card-skeleton {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .forecast-container {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+
+  .forecast-card {
+    padding: 0.8rem;
+  }
+
+  .temp-value {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .forecast-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .forecast-card {
+    padding: 1.5rem;
+  }
+
+  .forecast-date {
+    font-size: 0.95rem;
+  }
+
+  .temp-value {
+    font-size: 1.4rem;
+  }
+
+  .condition-text {
+    font-size: 0.9rem;
+  }
+}

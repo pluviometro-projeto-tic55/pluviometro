@@ -212,11 +212,17 @@ def save_forecast_to_db(rc_id, forecast_data):
                 if not record:
                     record = Forecast(rcID=rc_id, timestamp=ts)
                 
-                record.c_temp = hour_data.get('temp')
-                record.c_humidity = hour_data.get('humidity')
-                record.c_pressure = hour_data.get('pressure')
-                record.c_wind_speed = hour_data.get('wind_speed')
-                record.c_lux = hour_data.get('lux')
+                # Helper function to replace NaN with None (NULL in database)
+                def get_valid(val, default=None):
+                    if val is not None and pd.notna(val):
+                        return float(val) if isinstance(val, (int, float)) else val
+                    return default
+                
+                record.c_temp = get_valid(hour_data.get('temp'))
+                record.c_humidity = get_valid(hour_data.get('humidity'))
+                record.c_pressure = get_valid(hour_data.get('pressure'))
+                record.c_wind_speed = get_valid(hour_data.get('wind_speed'))
+                record.c_lux = get_valid(hour_data.get('lux'))
                 
                 if daily_info:
                     record.temp_min = int(daily_info.get('min_temp', 0))

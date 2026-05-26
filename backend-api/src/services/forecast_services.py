@@ -217,7 +217,7 @@ def get_station_data_by_id(rc_id):
 
     # Dados API externa
     try:
-        _, _, _, api_wind, api_rain = get_external_weather_values(latitude, longitude)
+        _, _, _, api_wind, api_rain, _ = get_external_weather_values(latitude, longitude)
     except ConnectionError:
         api_wind = None
         api_rain = None

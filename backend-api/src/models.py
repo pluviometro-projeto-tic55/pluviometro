@@ -4,7 +4,7 @@ import datetime
 
 # ----Tabela RaspClient----
 class RaspClient(db.Model):
-    __tablename__ = 'RaspClient'
+    __tablename__ = 'raspclient'
 
     "Classe para a tabela de cadastro das estações."
 
@@ -42,7 +42,7 @@ class RaspClient(db.Model):
 # ----Tabela RaspData----
 class RaspData(db.Model):
 
-    __tablename__ = 'RaspData'
+    __tablename__ = 'raspdata'
     
     "Classe para a tabela que armazena os dados crus recebidos diretamente da estação."
     
@@ -50,7 +50,7 @@ class RaspData(db.Model):
     rdID = db.Column(db.Integer, primary_key = True)
 
     #Identifica qual estação enviou os dados
-    rcID = db.Column(db.Integer, db.ForeignKey("RaspClient.rcID"), nullable = False)
+    rcID = db.Column(db.Integer, db.ForeignKey("raspclient.rcID"), nullable = False)
 
     timestamp = db.Column(db.DateTime, server_default = func.now())
     temp = db.Column(db.Float)
@@ -64,7 +64,7 @@ class RaspData(db.Model):
 # ----Tabela Forecast----
 class Forecast(db.Model):
 
-    __tablename__ = 'Forecast'
+    __tablename__ = 'forecast'
 
     "Classe para a tabela que armazena as previsões meteorológicas"
     
@@ -72,7 +72,7 @@ class Forecast(db.Model):
     fcID = db.Column(db.Integer, primary_key = True)
     
     #Identifica qual estação enviou os dados
-    rcID = db.Column(db.Integer, db.ForeignKey("RaspClient.rcID"), nullable = False)
+    rcID = db.Column(db.Integer, db.ForeignKey("raspclient.rcID"), nullable = False)
 
     timestamp = db.Column(db.DateTime, server_default = func.now())
     c_temp = db.Column(db.Float)

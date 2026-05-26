@@ -39,11 +39,14 @@ function DailySummary({ weather, forecast, loading }) {
     };
   }, [forecast]);
 
-  const isOnline = weather?.last_update <= 5;
+  const isOnline = weather?.last_update <= 300; // 5 minutos em segundos
   const statusColor = isOnline ? "bg-emerald-500" : "bg-red-500";
   const statusGlow = isOnline ? "shadow-[0_0_6px_rgba(16,185,129,0.5)]" : "shadow-[0_0_6px_rgba(239,68,68,0.5)]";
   
-  const getUpdateLabel = (minutes) => {
+  const getUpdateLabel = (seconds) => {
+    // Converte segundos para minutos
+    const minutes = Math.floor((seconds || 0) / 60);
+    
     if (!minutes || minutes < 1) return "Atualizado agora";
     
     // Menos de 1 hora

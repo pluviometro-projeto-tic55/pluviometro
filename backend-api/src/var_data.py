@@ -55,5 +55,17 @@ def prepare_var_data(rc_id, days=365):
 
     # preenche quaisquer valores NaN restantes
     df_final = df_interpolated.bfill().ffill()
+    
+    # Trata colunas que ainda têm NaN (ex: wind_speed completamente vazio)
+    # Substitui com a média da coluna ou com 0 se tudo for NaN
+    for col in df_final.columns:
+        if df_final[col].isna().any():
+            col_mean = df_final[col].mean()
+            if pd.isna(col_mean):
+                # Se a coluna é toda NaN, usa 0
+                df_final[col] = df_final[col].fillna(0)
+            else:
+                # Se há algum valor, usa a média
+                df_final[col] = df_final[col].fillna(col_mean)
 
     return df_final
