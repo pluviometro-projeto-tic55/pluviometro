@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-socketio = SocketIO(cors_allowed_origins="*")
+socketio = SocketIO(cors_allowed_origins="*", async_mode="threading")
 jwt = JWTManager()
 
 def create_app(testing=False, database_uri=None):
