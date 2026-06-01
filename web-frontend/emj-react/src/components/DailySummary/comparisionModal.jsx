@@ -4,7 +4,6 @@ import Table from "../UI/Table";
 import VariationBadge from "../UI/VariationBadge";
 import { Dot } from "lucide-react";
 import PropTypes from "prop-types";
-import { errorPercent } from "../../utils/errorPercent";
 
 function ComparisonModal({isOpen, onClose, weather, externalData}) {
     const columns = [
@@ -12,7 +11,7 @@ function ComparisonModal({isOpen, onClose, weather, externalData}) {
         { label: "Sensor Local", key: "local" },
         { label: "API Externa", key: "owm" },
         {
-          label: "Margem de Erro",
+          label: "Variação Local",
           key: "error",
           render: (value) => <VariationBadge value={value} />,
         },
@@ -21,48 +20,33 @@ function ComparisonModal({isOpen, onClose, weather, externalData}) {
     const dataTable = [
         {
           summary: "Temperatura",
-          local: `${Math.round(weather?.temperature)} °C`,
-          owm: `${Math.round(externalData?.external_temperature)} °C`,
-          error: errorPercent(
-            weather?.temperature,
-            externalData?.external_temperature,
-          ),
+          local: `${Math.round(weather?.temperature ?? 0)} °C`,
+          owm: `${Math.round(externalData?.external_temperature ?? 0)} °C`,
+          error: parseFloat(((weather?.temperature ?? 0) - (externalData?.external_temperature ?? 0)).toFixed(1)),
         },
         {
           summary: "Umidade",
-          local: `${Math.round(weather?.humidity)}%`,
-          owm: `${Math.round(externalData?.external_humidity)}%`,
-          error: errorPercent(
-            weather?.humidity,
-            externalData?.external_humidity,
-          ),
+          local: `${Math.round(weather?.humidity ?? 0)}%`,
+          owm: `${Math.round(externalData?.external_humidity ?? 0)}%`,
+          error: parseFloat(((weather?.humidity ?? 0) - (externalData?.external_humidity ?? 0)).toFixed(0)),
         },
         {
           summary: "Pressão",
-          local: `${Math.round(weather?.pressure)} hPa`,
-          owm: `${Math.round(externalData?.external_pressure)} hPa`,
-          error: errorPercent(
-            weather?.pressure,
-            externalData?.external_pressure,
-          ),
+          local: `${Math.round(weather?.pressure ?? 0)} hPa`,
+          owm: `${Math.round(externalData?.external_pressure ?? 0)} hPa`,
+          error: parseFloat(((weather?.pressure ?? 0) - (externalData?.external_pressure ?? 0)).toFixed(0)),
         },
         {
           summary: "Vento",
-          local: `${Math.round(weather?.wind_speed)} km/h`,
-          owm: `${Math.round(externalData?.external_wind_speed)} km/h`,
-          error: errorPercent(
-            weather?.wind_speed,
-            externalData?.external_wind_speed,
-          ),
+          local: `${Math.round(weather?.wind_speed ?? 0)} km/h`,
+          owm: `${Math.round(externalData?.external_wind_speed ?? 0)} km/h`,
+          error: parseFloat(((weather?.wind_speed ?? 0) - (externalData?.external_wind_speed ?? 0)).toFixed(1)),
         },
         {
           summary: "Chuva",
-          local: `${Math.round(weather?.rain_chance)}%`,
-          owm: `${Math.round(externalData?.external_rain_chance)}%`,
-          error: errorPercent(
-            weather?.rain_chance,
-            externalData?.external_rain_chance,
-          ),
+          local: `${weather?.rain_mm ?? 0} mm`,
+          owm: `${externalData?.external_rain_mm ?? 0} mm`,
+          error: null,
         },
       ];
 
@@ -110,6 +94,6 @@ export default ComparisonModal;
 ComparisonModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  weather: PropTypes.array.isRequired,
-  externalData: PropTypes.array.isRequired,
+  weather: PropTypes.object,
+  externalData: PropTypes.object,
 };

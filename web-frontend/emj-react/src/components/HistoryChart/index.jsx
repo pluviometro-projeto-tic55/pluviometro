@@ -38,8 +38,16 @@ export default function HistoryChart({ title, rcId, variables }) {
     setDateRange(range || { startDate: null, endDate: null });
   };
 
+  // FUNÇÃO DE FORMATAR DATA (Ajuste solicitado)
+  const formatDisplayDate = (day, hour) => {
+    // Transforma "2026-05-10" em "10/05/2026"
+    const [year, month, dayPart] = day.split("-");
+    const formattedDate = `${dayPart}/${month}/${year}`;
+    return `${formattedDate} ${String(hour).padStart(2, "0")}h`;
+  };
+
   const chartData = data.map((item) => ({
-    day: `${item.day} ${String(item.avgHour).padStart(2, "0")}h`,
+    day: formatDisplayDate(item.day, item.avgHour), // Formatação aplicada aqui
     [currentVariableConfig.key]: item[currentVariableConfig.key],
   }));
 
@@ -47,7 +55,6 @@ export default function HistoryChart({ title, rcId, variables }) {
 
   const handleExportCSV = () => {
     if (!startDate) return;
-
     exportCSV({
       stationId: rcId,
       variable: currentVariableConfig.key,
@@ -59,32 +66,21 @@ export default function HistoryChart({ title, rcId, variables }) {
   return (
     <BaseCard>
       <div className="chart-header-content">
-        {/* Título e botão CSV */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h3 className="chart-title">{title}</h3>
-
           <Button
             variant="export"
             onClick={handleExportCSV}
             disabled={exporting || !startDate}
-            aria-label={`Exportar CSV da variável ${selectedVar} para o período selecionado`}>
+            aria-label={`Exportar CSV da variável ${selectedVar}`}>
             <Download size={18} />
             {exporting ? "Exportando..." : "Exportar CSV"}
           </Button>
         </div>
 
-        {/* Controles */}
         <div className="controls-bar-row">
           <div className="date-picker-fixed-width">
-            <DateRangePicker
-              onChange={handleDateChange}
-              aria-label="Selecionar período de datas para exibir o gráfico"
-            />
+            <DateRangePicker onChange={handleDateChange} />
           </div>
 
           <div className="chart-filters-content">
@@ -99,16 +95,12 @@ export default function HistoryChart({ title, rcId, variables }) {
                   key={label}
                   variant={`secondary ${selectedVar === label ? "active" : ""}`}
                   onClick={() => {
-                    if (!dateRange.startDate || !dateRange.endDate) {
-                      notify.warning(
-                        "É necessário ter uma data inicial e final selecionada.",
-                      );
+                    if (!dateRange.startDate) {
+                      notify.warning("Selecione um período.");
                       return;
                     }
                     setSelectedVar(label);
-                  }}
-                  aria-pressed={selectedVar === label}
-                  aria-label={`Filtrar por variável ${label}`}>
+                  }}>
                   {label}
                 </Button>
               ))}
@@ -117,15 +109,9 @@ export default function HistoryChart({ title, rcId, variables }) {
         </div>
       </div>
 
-      {/* Gráfico */}
-      <div
-        className="chart-display-container"
-        role="region"
-        aria-label={`Gráfico de ${selectedVar} para o período selecionado`}>
+      <div className="chart-display-container">
         {loading ? (
-          <div className="no-data-placeholder">
-            <p>Carregando dados...</p>
-          </div>
+          <div className="no-data-placeholder"><p>Carregando dados...</p></div>
         ) : chartData.length > 0 ? (
           <Chart
             key={`${selectedVar}-${dateRange.startDate}`}
@@ -134,9 +120,7 @@ export default function HistoryChart({ title, rcId, variables }) {
             config={{ ...currentVariableConfig, label: selectedVar }}
           />
         ) : (
-          <div className="no-data-placeholder">
-            <p>Selecione um período para visualizar os dados</p>
-          </div>
+          <div className="no-data-placeholder"><p>Selecione um período.</p></div>
         )}
       </div>
     </BaseCard>

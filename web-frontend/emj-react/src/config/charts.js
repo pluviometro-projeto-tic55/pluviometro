@@ -19,4 +19,9 @@ export const chartHistoryVariables = {
     color: "#8b5cf6",
     unit: "km/h",
   },
+  "Quantidade de Chuva": { // Novo filtro adicionado
+    key: "rain",
+    color: "#6366f1",
+    unit: "mm",
+  },
 };

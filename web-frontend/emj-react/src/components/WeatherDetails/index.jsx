@@ -9,7 +9,7 @@ export default function WeatherDetails({ weather, loading }) {
   const items = [
     {
       title: "Umidade",
-      value: `${Math.round(weather?.humidity)}%`,
+      value: `${Math.round(weather?.humidity ?? 0)}%`,
       description: weather?.humidity_status,
       icon: (
         <Droplets
@@ -20,7 +20,7 @@ export default function WeatherDetails({ weather, loading }) {
     },
     {
       title: "Vento",
-      value: `${Math.round(weather?.wind_speed)} km/h`,
+      value: `${Math.round(weather?.wind_speed ?? 0)} km/h`,
       description: weather?.wind_speed_status,
       icon: (
         <Wind className="w-5 h-5 3xl:w-8 3xl:h-8" color={"var(--text-900)"} />
@@ -28,7 +28,7 @@ export default function WeatherDetails({ weather, loading }) {
     },
     {
       title: "Pressão",
-      value: `${Math.round(weather?.pressure)} hPa`,
+      value: `${Math.round(weather?.pressure ?? 0)} hPa`,
       description: weather?.pressure_trend_status,
       icon: (
         <Gauge className="w-5 h-5 3xl:w-8 3xl:h-8" color={"var(--text-900)"} />
@@ -36,8 +36,8 @@ export default function WeatherDetails({ weather, loading }) {
     },
     {
       title: "Chuva",
-      value: `${Math.round(weather?.rain_chance)}%`,
-      description: weather?.rain_chance_status,
+      value: `${weather?.rain_mm ?? 0} mm`,
+      description: "Precipitação acumulada",
       icon: (
         <CloudRain
           className="w-5 h-5 3xl:w-8 3xl:h-8"
@@ -45,7 +45,7 @@ export default function WeatherDetails({ weather, loading }) {
         />
       ),
     },
-  ];
+  ]; // <--- Faltava este fechamento de array
 
   return (
     <div className="weather-details-grid">

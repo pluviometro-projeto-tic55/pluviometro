@@ -193,11 +193,12 @@ function DailySummary({ weather, forecast, loading }) {
 }
 
 export default DailySummary;
+
 DailySummary.propTypes = {
   weather: PropTypes.shape({
     temperature: PropTypes.number,
     wind_speed: PropTypes.number,
-    rain_chance: PropTypes.number,
+    rain_mm: PropTypes.number,
     humidity: PropTypes.number,
     pressure:  PropTypes.number,
     cloudiness: PropTypes.number,

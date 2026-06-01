@@ -3,6 +3,7 @@ export default function VariationBadge({ value }) {
     return <span>-</span>;
   }
 
+  // Mantive sua lógica original de verificação de cor
   const isLowVariation = value <= 10;
 
   const style = {
@@ -17,8 +18,9 @@ export default function VariationBadge({ value }) {
   return (
     <span
       className="p-1! rounded text-sm font-bold min-w-11 text-center"
-      style={style}>
-      {value}%
+      style={style}
+    >
+      {value > 0 ? `+${value}` : value}
     </span>
   );
 }

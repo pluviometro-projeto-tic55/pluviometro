@@ -1,0 +1,2 @@
+DATABASE_URI=mysql+pymysql://root:@localhost:3306/weatherdb 
+API_KEY=537dbd212c0c44f796232914262605
