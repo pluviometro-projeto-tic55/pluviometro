@@ -35,7 +35,7 @@ function DailySummary({ weather, forecast, loading }) {
     return {
       tempMin: Math.round(todayData.min_temp),
       tempMax: Math.round(todayData.max_temp),
-      felsLike: Math.round(todayData.heat_index),
+      feelsLike: Math.round(todayData.heat_index),
     };
   }, [forecast]);
 
@@ -166,7 +166,7 @@ function DailySummary({ weather, forecast, loading }) {
                   </p>
                 </div>
                 <p className="font-bold text-sm 3xl:text-xl 4xl:text-2xl">
-                  {todayTemps?.felsLike ?? "-"}°
+                  {todayTemps?.feelsLike ?? "-"}°
                 </p>
               </div>
 

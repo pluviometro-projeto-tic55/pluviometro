@@ -163,6 +163,17 @@ def is_valid(temp, hum, press, lux):
 
     return True
 
+
+def is_suspicious_humidity(humidity_values):
+    """
+    Detecta leituras de umidade possivelmente travadas em 100%.
+    """
+    return (
+        humidity_values
+        and len(humidity_values) >= 6
+        and all(h == 100.0 for h in humidity_values)
+    )
+
 # ============================================
 # BANCO
 # ============================================
@@ -346,6 +357,13 @@ def main():
                     round(statistics.mean(m_hum), 2)
                     if m_hum else None
                 )
+
+                if avg_hum == 100.0 and is_suspicious_humidity(m_hum):
+                    logging.warning(
+                        "Possível umidade travada em 100%. "
+                        "A leitura de umidade do período não será gravada."
+                    )
+                    avg_hum = None
 
                 avg_press = (
                     round(statistics.mean(m_press), 2)

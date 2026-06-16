@@ -67,12 +67,15 @@ def get_station_forecast(rc_id):
         from ..models import Forecast
         
         # Buscar 4 primeiros registros (00:00) dos próximos 4 dias
+        start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = start_date + timedelta(days=4)
+
         forecasts = db.session.query(Forecast).filter(
             and_(
                 Forecast.rcID == rc_id,
                 func.hour(Forecast.timestamp) == 0,
-                Forecast.timestamp >= datetime(2026, 5, 25),
-                Forecast.timestamp <= datetime(2026, 5, 28)
+                Forecast.timestamp >= start_date,
+                Forecast.timestamp <= end_date
             )
         ).order_by(Forecast.timestamp).limit(4).all()
         
@@ -86,11 +89,16 @@ def get_station_forecast(rc_id):
         for idx, forecast in enumerate(forecasts):
             date_str = forecast.timestamp.strftime("%Y-%m-%d")
             
+            if hasattr(forecast, 'feels_like') and forecast.feels_like is not None:
+                heat_idx = int(forecast.feels_like)
+            else:
+                heat_idx = int(forecast.temp_max) if forecast.temp_max else 0
+
             daily_summary.append({
                 "date": date_str,
                 "max_temp": int(forecast.temp_max) if forecast.temp_max else 0,
                 "min_temp": int(forecast.temp_min) if forecast.temp_min else 0,
-                "heat_index": int(forecast.temp_max) if forecast.temp_max else 0,
+                "heat_index": heat_idx,
                 "avg_wind_speed": int(forecast.c_wind_speed) if forecast.c_wind_speed else 0,
                 "cloudiness": 0,
                 "description": forecast.general_summary or "N/A"
