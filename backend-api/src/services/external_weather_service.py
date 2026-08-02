@@ -30,15 +30,26 @@ def get_external_weather_values(latitude, longitude):
 
     data = response.json()
 
-    api_pressure = data.get('current', {}).get('pressure_mb')
-    api_temp = data.get('current', {}).get('temp_c')
-    api_humidity = data.get('current', {}).get('humidity')
-    api_wind = data.get('current', {}).get('wind_kph')
+    current_data = data.get('current', {})
+    api_pressure = current_data.get('pressure_mb')
+    api_temp = current_data.get('temp_c')
+    api_humidity = current_data.get('humidity')
+    api_wind = current_data.get('wind_kph')
+    # WeatherAPI nao retorna lux diretamente; usamos UV como proxy externo de luminosidade.
+    api_luminosity = current_data.get('uv')
+    api_uv_index = current_data.get('uv')
+    api_is_day = current_data.get('is_day')
+    api_condition = current_data.get('condition', {}).get('text')
+    api_last_updated_epoch = current_data.get('last_updated_epoch')
 
     forecast_days = data.get("forecast", {}).get("forecastday", [])
    
     api_rain = (
         forecast_days[0].get("day", {}).get("daily_chance_of_rain")
+        if forecast_days else None
+    )
+    api_rain_mm = (
+        forecast_days[0].get("day", {}).get("totalprecip_mm")
         if forecast_days else None
     )
 
@@ -51,9 +62,29 @@ def get_external_weather_values(latitude, longitude):
             "min_temp": day.get("day", {}).get("mintemp_c"),
             "avg_temp": day.get("day", {}).get("avgtemp_c"),
             "rain_chance": day.get("day", {}).get("daily_chance_of_rain"),
+            "rain_mm": day.get("day", {}).get("totalprecip_mm"),
             "condition": day.get("day", {}).get("condition", {}).get("text"),
             "icon": day.get("day", {}).get("condition", {}).get("icon")
         })
 
-    return api_pressure, api_temp, api_humidity, api_wind, api_rain, forecast_4days
+    first_forecast_day = forecast_days[0] if forecast_days else {}
+    api_sunrise = first_forecast_day.get('astro', {}).get('sunrise')
+    api_sunset = first_forecast_day.get('astro', {}).get('sunset')
+
+    return (
+        api_pressure,
+        api_temp,
+        api_humidity,
+        api_wind,
+        api_rain,
+        api_rain_mm,
+        forecast_4days,
+        api_luminosity,
+        api_uv_index,
+        api_is_day,
+        api_condition,
+        api_last_updated_epoch,
+        api_sunrise,
+        api_sunset,
+    )
 

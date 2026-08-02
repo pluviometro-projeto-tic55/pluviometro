@@ -1,4 +1,4 @@
-from flask import Flask, app
+from flask import Flask, app, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_socketio import SocketIO
@@ -19,6 +19,10 @@ jwt = JWTManager()
 
 def create_app(testing=False, database_uri=None):
     app = Flask(__name__)
+
+    @app.get('/api/health')
+    def healthcheck():
+        return jsonify({"status": "ok"}), 200
 
     if testing:
         app.config["TESTING"] = True

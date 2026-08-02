@@ -46,14 +46,38 @@ def get_external_data(rc_id):
         external_data = get_external_weather_values(latitude, longitude)
 
         if isinstance(external_data, tuple):
-            api_pressure, api_temp, api_humidity, api_wind, api_rain, forecast_4days = external_data
+            (
+                api_pressure,
+                api_temp,
+                api_humidity,
+                api_wind,
+                api_rain,
+                api_rain_mm,
+                forecast_4days,
+                api_luminosity,
+                api_uv_index,
+                api_is_day,
+                api_condition,
+                api_last_updated_epoch,
+                api_sunrise,
+                api_sunset,
+            ) = external_data
+
             external_data = {
                 "external_pressure": api_pressure,
                 "external_temperature": api_temp,
                 "external_humidity": api_humidity,
                 "external_wind_speed": api_wind,
                 "external_rain_chance": api_rain,
-                "forecast_4days": forecast_4days
+                "external_rain_mm": api_rain_mm,
+                "forecast_4days": forecast_4days,
+                "external_luminosity": api_luminosity,
+                "external_uv_index": api_uv_index,
+                "external_is_day": api_is_day,
+                "external_condition": api_condition,
+                "external_last_updated_epoch": api_last_updated_epoch,
+                "external_sunrise": api_sunrise,
+                "external_sunset": api_sunset,
             }
 
         return jsonify(external_data), 200

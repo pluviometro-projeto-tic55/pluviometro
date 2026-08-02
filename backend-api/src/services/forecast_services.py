@@ -1,7 +1,32 @@
 from ..models import RaspClient, RaspData
 from sqlalchemy import desc
 from datetime import datetime, timedelta, timezone
-from .external_weather_service import get_external_weather_values, get_station_coordinates
+from .external_weather_service import get_external_weather_values
+
+
+def _safe_mean(values):
+    numeric_values = [value for value in values if isinstance(value, (int, float))]
+    if not numeric_values:
+        return None
+    return sum(numeric_values) / len(numeric_values)
+
+
+def _safe_heat_index(temperature, humidity):
+    if temperature is None or humidity is None:
+        return None
+    try:
+        return calc_heat_index(temperature, humidity)
+    except (TypeError, ValueError):
+        return None
+
+
+def _safe_cloudiness(lux, pressure, humidity):
+    if lux is None or pressure is None or humidity is None:
+        return None
+    try:
+        return calc_cloudiness(lux, pressure, humidity)
+    except (TypeError, ValueError):
+        return None
 
 def calc_heat_index(temperature, humidity):
     """
@@ -210,25 +235,100 @@ def get_station_data_by_id(rc_id):
     """
     Busca e formata os dados mais recentes para um ID de estação específico.
     """
-    # Estamos usando vento/chuva da api externa até a instalação do pluviômetro/anemômetro
-  
-    # Coordenadas 
-    latitude, longitude = get_station_coordinates(rc_id)
+    station_status = RaspClient.query.filter_by(rcID=rc_id).first()
 
-    # Dados API externa
-    try:
-        _, _, _, api_wind, api_rain, _ = get_external_weather_values(latitude, longitude)
-    except ConnectionError:
-        api_wind = None
-        api_rain = None
+    if not station_status:
+        return None
 
     # Filtragem por id da estação e último registro
     data_details = RaspData.query.filter_by(rcID=rc_id).order_by(desc(RaspData.timestamp)).first()
 
-    station_status = RaspClient.query.filter_by(rcID=rc_id).first()
+    latest_timestamp = data_details.timestamp if data_details else datetime.utcnow()
+    window_start = latest_timestamp - timedelta(hours=1)
+
+    recent_readings = (
+        RaspData.query
+        .filter(
+            RaspData.rcID == rc_id,
+            RaspData.timestamp >= window_start,
+            RaspData.timestamp <= latest_timestamp,
+        )
+        .order_by(desc(RaspData.timestamp))
+        .all()
+    )
+
+    avg_temp_1h = _safe_mean([reading.temp for reading in recent_readings])
+    avg_humidity_1h = _safe_mean([reading.humidity for reading in recent_readings])
+    avg_pressure_1h = _safe_mean([reading.pressure for reading in recent_readings])
+    avg_lux_1h = _safe_mean([reading.lux for reading in recent_readings])
+    avg_rain_mm_1h = _safe_mean([reading.pluv for reading in recent_readings])
+
+    # Estamos usando vento/chuva da api externa até a instalação do pluviômetro/anemômetro
+    api_temp = None
+    api_humidity = None
+    api_pressure = None
+    api_wind = None
+    api_rain = None
+    api_luminosity = None
+
+    if station_status.latitude is not None and station_status.longitude is not None:
+        try:
+            (
+                api_pressure,
+                api_temp,
+                api_humidity,
+                api_wind,
+                api_rain,
+                _,
+                _,
+                api_luminosity,
+                *_,
+            ) = get_external_weather_values(station_status.latitude, station_status.longitude)
+        except (ConnectionError, ValueError):
+            api_wind = None
+            api_rain = None
 
     if not data_details:
-        return None
+        timestamp = datetime.now(timezone.utc)
+        temperature = avg_temp_1h if avg_temp_1h is not None else api_temp
+        humidity = avg_humidity_1h if avg_humidity_1h is not None else api_humidity
+        pressure = avg_pressure_1h if avg_pressure_1h is not None else api_pressure
+        luminosity = avg_lux_1h if avg_lux_1h is not None else api_luminosity
+        rain_mm = avg_rain_mm_1h
+        source_mode = "rolling_average_1h"
+        if avg_temp_1h is None and avg_humidity_1h is None and avg_pressure_1h is None:
+            source_mode = "external_fallback"
+        if (
+            temperature is None
+            and humidity is None
+            and pressure is None
+            and luminosity is None
+        ):
+            source_mode = "no_data"
+
+        return {
+            "rdID": None,
+            "rcID": rc_id,
+            "timestamp": timestamp.isoformat(),
+            "last_update": None,
+            "status": station_status.status,
+            "temperature": temperature,
+            "humidity": humidity,
+            "humidity_status": classify_humidity(humidity) if humidity is not None else None,
+            "heat_index": _safe_heat_index(temperature, humidity),
+            "pressure": pressure,
+            "wind_speed": api_wind,
+            "wind_speed_status": classify_wind_status(api_wind) if api_wind is not None else None,
+            "rain_mm": rain_mm,
+            "rain_chance": api_rain,
+            "rain_chance_status": classify_rain_probability(api_rain) if api_rain is not None else None,
+            "pressure_trend": 0.0,
+            "pressure_trend_status": classify_pressure_trend(0.0),
+            "luminosity": luminosity,
+            "cloudiness": _safe_cloudiness(luminosity, pressure, humidity),
+            "is_estimated": True,
+            "estimate_source": source_mode,
+        }
 
     past_pressure = get_pressure_3_hours_ago(data_details.rcID)
     trend = calc_pressure_trend(data_details.pressure, past_pressure)
@@ -242,28 +342,42 @@ def get_station_data_by_id(rc_id):
         (datetime.now(timezone.utc) - timestamp).total_seconds() / 60
      )
 
+    temperature = data_details.temp if data_details.temp is not None else avg_temp_1h
+    humidity = data_details.humidity if data_details.humidity is not None else avg_humidity_1h
+    pressure = data_details.pressure if data_details.pressure is not None else avg_pressure_1h
+    luminosity = data_details.lux if data_details.lux is not None else avg_lux_1h
+    rain_mm = data_details.pluv if data_details.pluv is not None else avg_rain_mm_1h
+
+    used_local_average = any([
+        data_details.temp is None and avg_temp_1h is not None,
+        data_details.humidity is None and avg_humidity_1h is not None,
+        data_details.pressure is None and avg_pressure_1h is not None,
+        data_details.lux is None and avg_lux_1h is not None,
+        data_details.pluv is None and avg_rain_mm_1h is not None,
+    ])
+
     response_details = {
         "rdID": data_details.rdID,
         "rcID": data_details.rcID,
         "timestamp": data_details.timestamp.isoformat(),
         "last_update": max(last_update_minutes, 0),
         "status": station_status.status,
-        "temperature": data_details.temp,
-        "humidity": data_details.humidity,
-        "humidity_status": classify_humidity(data_details.humidity),
-        "heat_index": calc_heat_index(data_details.temp, data_details.humidity),
-        "pressure": data_details.pressure,
+        "temperature": temperature,
+        "humidity": humidity,
+        "humidity_status": classify_humidity(humidity) if humidity is not None else None,
+        "heat_index": _safe_heat_index(temperature, humidity),
+        "pressure": pressure,
         "wind_speed": api_wind,
         "wind_speed_status": classify_wind_status(api_wind) if api_wind is not None else None,
+        "rain_mm": rain_mm,
         "rain_chance": api_rain,
         "rain_chance_status": classify_rain_probability(api_rain) if api_rain is not None else None,
         "pressure_trend": trend,
         "pressure_trend_status": classify_pressure_trend(trend),
-        "cloudiness": calc_cloudiness(
-            data_details.lux,
-            data_details.pressure,
-            data_details.humidity
-        ),
+        "luminosity": luminosity,
+        "cloudiness": _safe_cloudiness(luminosity, pressure, humidity),
+        "is_estimated": used_local_average,
+        "estimate_source": "rolling_average_1h" if used_local_average else "live",
     }
 
     return response_details

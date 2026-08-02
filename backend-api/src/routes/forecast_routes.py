@@ -1,9 +1,6 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify
 from ..services.forecast_services import get_station_data_by_id
-from ..var import get_cached_forecast
-from ..database import db
-from sqlalchemy import func, and_
-from datetime import datetime, timedelta
+from ..var import get_cached_forecast, predict_weekly_weather
 import logging
 
 forecast_bp = Blueprint('data', __name__)
@@ -64,47 +61,17 @@ def get_station_forecast(rc_id):
         description: Nenhuma previsão encontrada
     """
     try:
-        from ..models import Forecast
-        
-        # Buscar 4 primeiros registros (00:00) dos próximos 4 dias
-        start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        end_date = start_date + timedelta(days=4)
+      # Prioriza cache gerado pelo scheduler (fonte principal da previsao no frontend).
+      forecast_data = get_cached_forecast(rc_id)
 
-        forecasts = db.session.query(Forecast).filter(
-            and_(
-                Forecast.rcID == rc_id,
-                func.hour(Forecast.timestamp) == 0,
-                Forecast.timestamp >= start_date,
-                Forecast.timestamp <= end_date
-            )
-        ).order_by(Forecast.timestamp).limit(4).all()
-        
-        if not forecasts:
-            return jsonify({"message": "Previsão não disponível."}), 404
-        
-        # Transformar para formato esperado pelo frontend
-        daily_summary = []
-        weekdays = ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira"]
-        
-        for idx, forecast in enumerate(forecasts):
-            date_str = forecast.timestamp.strftime("%Y-%m-%d")
-            
-            if hasattr(forecast, 'feels_like') and forecast.feels_like is not None:
-                heat_idx = int(forecast.feels_like)
-            else:
-                heat_idx = int(forecast.temp_max) if forecast.temp_max else 0
+      # Fallback: tenta gerar na hora quando cache estiver ausente.
+      if forecast_data is None:
+        forecast_data = predict_weekly_weather(rc_id)
 
-            daily_summary.append({
-                "date": date_str,
-                "max_temp": int(forecast.temp_max) if forecast.temp_max else 0,
-                "min_temp": int(forecast.temp_min) if forecast.temp_min else 0,
-                "heat_index": heat_idx,
-                "avg_wind_speed": int(forecast.c_wind_speed) if forecast.c_wind_speed else 0,
-                "cloudiness": 0,
-                "description": forecast.general_summary or "N/A"
-            })
-        
-        return jsonify({"daily_summary": daily_summary}), 200
+      if not forecast_data or not forecast_data.get("daily_summary"):
+        return jsonify({"message": "Previsão não disponível."}), 404
+
+      return jsonify(forecast_data), 200
     
     except Exception as e:
         logger.error(f"Error fetching forecast: {str(e)}", exc_info=True)
