@@ -19,7 +19,7 @@ export function transformWeatherData(data) {
       minTemp: Math.round(dayData.min_temp),
       feelsLike: Math.round(dayData.heat_index),
       windSpeed: Math.round(dayData.avg_wind_speed),
-      rainChance: 0, //mockado por enquanto
+      rainMm: Math.round(dayData.rain_mm ?? 0),
       cloudiness: dayData.cloudiness,
     };
   });

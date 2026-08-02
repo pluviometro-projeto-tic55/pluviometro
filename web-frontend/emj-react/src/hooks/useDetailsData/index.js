@@ -7,20 +7,32 @@ export function useDetailsData(stationId) {
   const { request, loading, error } = useApi();
 
   useEffect(() => {
-    if (!stationId) return;
+    if (!stationId) {
+      setData(null);
+      return;
+    }
 
-    request({
-      method: "get",
-      url: `/api/stations/${stationId}/current`,
-    })
-      .then((response) => {
-        setData(response.data);
+    const fetchData = () => {
+      request({
+        method: "get",
+        url: `/api/stations/${stationId}/current`,
       })
-      .catch(() => {
-        notify.error(
-          "Erro ao conectar com o servidor. Tente novamente mais tarde.",
-        );
-      });
+        .then((response) => {
+          setData(response.data);
+        })
+        .catch(() => {
+          notify.error(
+            "Erro ao conectar com o servidor. Tente novamente mais tarde.",
+          );
+        });
+    };
+
+    fetchData();
+
+    // Atualiza automaticamente a cada 3 minutos.
+    const interval = setInterval(fetchData, 180000);
+
+    return () => clearInterval(interval);
   }, [stationId, request]);
 
   return { data, loading, error };

@@ -1,42 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { notify } from "../../services/notify";
 import { useApi } from "../useAPI";
 
 export function useExternalCurrentData(stationId) {
   const [data, setData] = useState(null);
+  const [lastSuccessAt, setLastSuccessAt] = useState(null);
+  const [isExternalOnline, setIsExternalOnline] = useState(false);
   const { request, loading, error } = useApi();
+  const hasShownErrorRef = useRef(false);
 
   useEffect(() => {
-  if (!stationId) return;
+    if (!stationId) {
+      setData(null);
+      setLastSuccessAt(null);
+      setIsExternalOnline(false);
+      hasShownErrorRef.current = false;
+      return;
+    }
 
-  const fetchData = () => {
-    request({
-      method: "get",
-      url: `/api/stations/${stationId}/external/current`,
-    })
-      .then((response) => {
-        setData(response.data);
+    const fetchData = () => {
+      request({
+        method: "get",
+        url: `/api/stations/${stationId}/external/current`,
       })
-      .catch((err) => {
-        if (err?.response?.status === 503) {
-          notify.warning("Dados externos temporariamente indisponíveis.");
-        } else {
-          notify.error(
-            "Erro ao buscar dados externos. Tente novamente mais tarde.",
-          );
-        }
-      });
-  };
+        .then((response) => {
+          setData(response.data);
+          setLastSuccessAt(Date.now());
+          setIsExternalOnline(true);
+          hasShownErrorRef.current = false;
+        })
+        .catch((err) => {
+          setIsExternalOnline(false);
 
-  // chama uma vez ao abrir
-  fetchData();
+          if (!hasShownErrorRef.current) {
+            if (err?.response?.status === 503) {
+              notify.warning("Dados externos temporariamente indisponíveis.");
+            } else {
+              notify.error(
+                "Erro ao buscar dados externos. Tente novamente mais tarde.",
+              );
+            }
 
-  //chama a cada 5 minutos
-  const interval = setInterval(fetchData, 300000);
+            hasShownErrorRef.current = true;
+          }
+        });
+    };
 
-  // limpa quando sair da tela
-  return () => clearInterval(interval);
+    // chama uma vez ao abrir
+    fetchData();
 
-}, [stationId]);
-  return { data, loading, error };
+    // chama a cada 3 minutos
+    const interval = setInterval(fetchData, 180000);
+
+    // limpa quando sair da tela
+    return () => clearInterval(interval);
+  }, [stationId, request]);
+
+  return { data, loading, error, lastSuccessAt, isExternalOnline };
 }

@@ -21,7 +21,7 @@ describe("transformWeatherData", () => {
     expect(result[0].minTemp).toBe(21);
     expect(result[0].feelsLike).toBe(32);
     expect(result[0].windSpeed).toBe(11);
-    expect(result[0].rainChance).toBe(0);
+    expect(result[0].rainMm).toBe(0);
     expect(result[0].cloudiness).toBe(0.5);
   });
 

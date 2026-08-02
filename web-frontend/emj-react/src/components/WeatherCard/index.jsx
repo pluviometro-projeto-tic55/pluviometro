@@ -11,7 +11,7 @@ export default function WeatherCard({
   minTemp,
   feelsLike,
   windSpeed,
-  rainChance,
+  rainMm,
   cloudiness,
   loading,
 }) {
@@ -84,7 +84,7 @@ export default function WeatherCard({
 
         <div className="flex justify-between">
           <span>Chuva</span>
-          <span>{rainChance}%</span>
+          <span>{rainMm} mm</span>
         </div>
       </div>
     </BaseCard>
@@ -98,7 +98,7 @@ WeatherCard.propTypes = {
   minTemp: PropTypes.number,
   feelsLike: PropTypes.number,
   windSpeed: PropTypes.number,
-  rainChance: PropTypes.number,
+  rainMm: PropTypes.number,
   cloudiness: PropTypes.number,
   loading: PropTypes.bool,
 };

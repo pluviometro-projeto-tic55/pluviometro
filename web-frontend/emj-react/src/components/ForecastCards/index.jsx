@@ -68,7 +68,7 @@ function ForecastCards({ externalData, loading }) {
             <div className="forecast-condition">
               <div className="condition-item">
                 <Droplets size={16} />
-                <span>{day.rain_chance}%</span>
+                <span>{Math.round(day.rain_mm ?? 0)} mm</span>
               </div>
               <div className="condition-text">
                 {day.condition || "Sem dados"}
@@ -88,7 +88,7 @@ ForecastCards.propTypes = {
         date: PropTypes.string,
         max_temp: PropTypes.number,
         min_temp: PropTypes.number,
-        rain_chance: PropTypes.number,
+        rain_mm: PropTypes.number,
         condition: PropTypes.string,
       })
     ),

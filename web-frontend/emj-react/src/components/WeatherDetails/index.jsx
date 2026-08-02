@@ -1,4 +1,4 @@
-import { Droplets, Wind, Gauge, CloudRain, GitCompare } from "lucide-react";
+import { Droplets, Wind, Gauge, CloudRain } from "lucide-react";
 import "./style.css";
 import BaseCard from "../UI/BaseCard";
 import Skeleton from "react-loading-skeleton";
@@ -36,8 +36,8 @@ export default function WeatherDetails({ weather, loading }) {
     },
     {
       title: "Chuva",
-      value: `${weather?.rain_mm ?? 0} mm`,
-      description: "Precipitação acumulada",
+      value: `${Math.round(weather?.rain_mm ?? 0)} mm`,
+      description: "Milímetros acumulados",
       icon: (
         <CloudRain
           className="w-5 h-5 3xl:w-8 3xl:h-8"

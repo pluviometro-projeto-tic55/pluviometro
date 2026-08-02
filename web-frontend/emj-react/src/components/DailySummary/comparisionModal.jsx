@@ -44,9 +44,15 @@ function ComparisonModal({isOpen, onClose, weather, externalData}) {
         },
         {
           summary: "Chuva",
-          local: `${weather?.rain_mm ?? 0} mm`,
-          owm: `${externalData?.external_rain_mm ?? 0} mm`,
+          local: `${Math.round(weather?.rain_mm ?? 0)} mm`,
+          owm: `${Math.round(externalData?.external_rain_mm ?? 0)} mm`,
           error: null,
+        },
+        {
+          summary: "Iluminância",
+          local: weather?.luminosity != null ? `${Math.round(weather.luminosity)} Lux` : "-",
+          owm: `0 Lux`,
+          error: weather?.luminosity != null ? parseFloat((weather.luminosity - 0).toFixed(1)) : null,
         },
       ];
 
