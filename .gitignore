@@ -1,0 +1,19 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+backend-api/venv/
+
+# Forecast/model artifacts
+backend-api/src/forecast_cache/*.pkl
+backend-api/src/model_store/*.pkl
+
+# VS Code local settings
+.vscode/
+
+# Local generated reports/evidence
+reports/
