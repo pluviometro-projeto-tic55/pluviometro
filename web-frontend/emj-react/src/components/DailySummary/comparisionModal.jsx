@@ -26,9 +26,12 @@ function ComparisonModal({isOpen, onClose, weather, externalData}) {
         },
         {
           summary: "Umidade",
-          local: `${Math.round(weather?.humidity ?? 0)}%`,
-          owm: `${Math.round(externalData?.external_humidity ?? 0)}%`,
-          error: parseFloat(((weather?.humidity ?? 0) - (externalData?.external_humidity ?? 0)).toFixed(0)),
+          local: weather?.humidity != null ? `${Math.round(weather.humidity)}%` : "-",
+          owm: externalData?.external_humidity != null ? `${Math.round(externalData.external_humidity)}%` : "-",
+          error:
+            weather?.humidity != null && externalData?.external_humidity != null
+              ? parseFloat((weather.humidity - externalData.external_humidity).toFixed(0))
+              : null,
         },
         {
           summary: "Pressão",

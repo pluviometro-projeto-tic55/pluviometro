@@ -131,7 +131,7 @@ sleep 2
 # ===========================================
 echo "--- 1/9 Instalando dependências do sistema... ---"
 sudo apt update
-sudo apt install -y python3 python3-pip python3-smbus i2c-tools mariadb-client 
+sudo apt install -y python3 python3-pip python3-smbus python3-rpi.gpio i2c-tools mariadb-client 
 sudo pip3 install RPi.bme280 --break-system-packages pymysql #BME280
 sudo apt install apache2-utils ### Biblioteca para criptografar a senha da estação
 sleep 3
@@ -365,27 +365,41 @@ echo "Arquivo de serviço copiado para /etc/systemd/system/$SERVICE e permissão
 sleep 3
 
 # ==================================================
+#  CONFIGURAÇÃO OPCIONAL DO PLUVIÔMETRO
+# ==================================================
+echo "--- 7.5/9 Configuração opcional do pluviômetro... ---"
+
+read -p "GPIO BCM do pluviômetro (deixe vazio para desativar): " RAIN_GPIO_PIN_INPUT
+read -p "Milímetros por pulso (deixe vazio para 0.297): " RAIN_MM_PER_PULSE_INPUT
+
+RAIN_ENV_FILE="$STATION_DIR/sensorcollect.env"
+
+{
+    echo "# Configuração opcional do pluviômetro"
+
+    if [ -n "$RAIN_GPIO_PIN_INPUT" ]; then
+        echo "RAIN_GPIO_PIN=$RAIN_GPIO_PIN_INPUT"
+    fi
+
+    if [ -n "$RAIN_MM_PER_PULSE_INPUT" ]; then
+        echo "RAIN_MM_PER_PULSE=$RAIN_MM_PER_PULSE_INPUT"
+    else
+        echo "RAIN_MM_PER_PULSE=0.297"
+    fi
+} > "$RAIN_ENV_FILE"
+
+sudo chown "$SUDO_USER:$SUDO_USER" "$RAIN_ENV_FILE"
+echo "Arquivo de ambiente criado em $RAIN_ENV_FILE"
+
+sleep 3
+
+# ==================================================
 #  INJETAR CONFIGURAÇÃO DO BANCO NO SCRIPT DE COLETA
 # ==================================================
 echo "--- 8/9 Injetando configurações no script de coleta... ---"
 
 # Caminho absoluto do script copiado que precisa ser editado (no diretório do usuário)
 SCRIPT_TO_EDIT="$STATION_DIR/$COLLECT_SCRIPT"
-
-# --- Injeção de Variáveis ---
-# O comando sed busca o placeholder literal (e as aspas) e substitui pelo valor validado.
-
-# 1. Substitui o Host/IP
-sudo sed -i "s|DB_HOST = \"DB_HOST_PLACEHOLDER\"|DB_HOST = \"$DB_HOST\"|g" "$SCRIPT_TO_EDIT"
-
-# 2. Substitui o Usuário
-sudo sed -i "s|DB_USER = \"DB_USER_PLACEHOLDER\"|DB_USER = \"$DB_USER\"|g" "$SCRIPT_TO_EDIT"
-
-# 3. Substitui a Senha
-sudo sed -i "s|DB_PASS = \"DB_PASS_PLACEHOLDER\"|DB_PASS = \"$DB_PASS\"|g" "$SCRIPT_TO_EDIT"
-
-# 4. Substitui o Nome do Banco
-sudo sed -i "s|DB_NAME = \"DB_NAME_PLACEHOLDER\"|DB_NAME = \"$DB_NAME\"|g" "$SCRIPT_TO_EDIT"
 
 # GARANTE QUE O SCRIPT PERTENÇA AO USUÁRIO FINAL
 sudo chown "$SUDO_USER:$SUDO_USER" "$SCRIPT_TO_EDIT"

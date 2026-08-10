@@ -6,6 +6,7 @@ import time
 import statistics
 import pymysql
 import logging
+import threading
 import board
 import smbus2
 import bme280
@@ -13,6 +14,20 @@ import socket
 import uuid
 import sqlite3
 from datetime import datetime
+from gpiozero import Button
+
+try:
+    import RPi.GPIO as GPIO
+    HAS_GPIO = True
+except Exception:
+    GPIO = None
+    HAS_GPIO = False
+try:
+    from gpiozero import Button
+    HAS_GPIOZERO = True
+except Exception:
+    Button = None
+    HAS_GPIOZERO = False
 
 # sensorscript v3 com buffer SQLite
 
@@ -44,16 +59,23 @@ def init_sqlite():
             Humidity REAL,
             Pressure REAL,
             Lux REAL,
+            Pluv REAL,
             created_at TEXT NOT NULL
         )
         """
     )
 
+    cursor.execute("PRAGMA table_info(buffer_raspdata)")
+    columns = {row[1] for row in cursor.fetchall()}
+
+    if "Pluv" not in columns:
+        cursor.execute("ALTER TABLE buffer_raspdata ADD COLUMN Pluv REAL")
+
     conn.commit()
     conn.close()
 
 
-def save_to_sqlite(rcID, temp, hum, press, lux):
+def save_to_sqlite(rcID, temp, hum, press, lux, pluv):
     """
     Salva a leitura no SQLite local.
     """
@@ -70,9 +92,10 @@ def save_to_sqlite(rcID, temp, hum, press, lux):
             Humidity,
             Pressure,
             Lux,
+            Pluv,
             created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             rcID,
@@ -80,6 +103,7 @@ def save_to_sqlite(rcID, temp, hum, press, lux):
             hum,
             press,
             lux,
+            pluv,
             datetime.now().isoformat(timespec="seconds")
         )
     )
@@ -131,6 +155,78 @@ bus = smbus2.SMBus(1)
 # ============================================
 HAS_BME280 = False
 HAS_BH1750 = False
+HAS_RAIN_GAUGE = False
+
+RAIN_GPIO_PIN_RAW = os.getenv("RAIN_GPIO_PIN", "")
+RAIN_GPIO_PIN = int(RAIN_GPIO_PIN_RAW) if RAIN_GPIO_PIN_RAW.isdigit() else None
+RAIN_MM_PER_PULSE_RAW = os.getenv("RAIN_MM_PER_PULSE", "0.297")
+
+try:
+    RAIN_MM_PER_PULSE = float(RAIN_MM_PER_PULSE_RAW)
+except ValueError:
+    RAIN_MM_PER_PULSE = 0.297
+
+rain_pulse_count = 0
+rain_lock = threading.Lock()
+
+def _rain_pulse_callback(*args):
+
+    global rain_pulse_count
+
+    with rain_lock:
+        rain_pulse_count += 1
+        logging.info(
+            f"Pulso pluviômetro detectado. Total: {rain_pulse_count}"
+        )
+
+
+# Instância global do pluviômetro
+rain_button = None
+
+def setup_rain_gauge():
+
+    global HAS_RAIN_GAUGE
+    global rain_button
+
+    if not HAS_GPIOZERO:
+
+        logging.warning(
+            "gpiozero indisponível. Pluviômetro desativado."
+        )
+
+        return
+
+    if RAIN_GPIO_PIN is None:
+
+        logging.info(
+            "RAIN_GPIO_PIN não configurado. Pluviômetro desativado."
+        )
+
+        return
+
+    try:
+
+        rain_button = Button(
+            RAIN_GPIO_PIN,
+            pull_up=True,
+            bounce_time=0.2
+        )
+
+        rain_button.when_pressed = _rain_pulse_callback
+
+        HAS_RAIN_GAUGE = True
+
+        logging.info(
+            f"Pluviômetro configurado no GPIO BCM {RAIN_GPIO_PIN} usando gpiozero."
+        )
+
+    except Exception as e:
+
+        HAS_RAIN_GAUGE = False
+
+        logging.error(
+            f"Erro ao configurar pluviômetro no GPIO {RAIN_GPIO_PIN}: {e}"
+        )
 
 # BME280
 try:
@@ -272,16 +368,18 @@ def is_suspicious_humidity(humidity_values):
 # ============================================
 # BANCO MARIADB
 # ============================================
-DB_HOST = "DB_HOST_PLACEHOLDER"
-DB_USER = "DB_USER_PLACEHOLDER"
-DB_PASS = "DB_PASS_PLACEHOLDER"
-DB_NAME = "DB_NAME_PLACEHOLDER"
+DB_HOST = os.getenv("DB_HOST", "DB_HOST_PLACEHOLDER")
+DB_PORT = os.getenv("DB_PORT", "DB_PORT_PLACEHOLDER")
+DB_USER = os.getenv("DB_USER", "DB_USER_PLACEHOLDER")
+DB_PASS = os.getenv("DB_PASS", "DB_PASS_PLACEHOLDER")
+DB_NAME = os.getenv("DB_NAME", "DB_NAME_PLACEHOLDER")
 
 
 def db_connect():
 
     return pymysql.connect(
         host=DB_HOST,
+        port=int(DB_PORT),
         user=DB_USER,
         password=DB_PASS,
         database=DB_NAME,
@@ -322,6 +420,7 @@ def sync_sqlite_to_mariadb():
                 Humidity,
                 Pressure,
                 Lux,
+                Pluv,
                 created_at
             FROM buffer_raspdata
             ORDER BY id ASC
@@ -355,16 +454,18 @@ def sync_sqlite_to_mariadb():
                         Temp,
                         Humidity,
                         Pressure,
-                        Lux
+                        Lux,
+                        Pluv
                     )
-                    VALUES (%s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     """,
                     (
                         row["rcID"],
                         row["Temp"],
                         row["Humidity"],
                         row["Pressure"],
-                        row["Lux"]
+                        row["Lux"],
+                        row["Pluv"]
                     )
                 )
 
@@ -497,6 +598,8 @@ def update_ip_mac(rcID):
 # ============================================
 def main():
 
+    global rain_pulse_count
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s"
@@ -505,6 +608,7 @@ def main():
     logging.info("Iniciando coleta...")
 
     init_sqlite()
+    setup_rain_gauge()
 
     rcID = get_rcid()
 
@@ -531,152 +635,171 @@ def main():
 
     last_send = time.time()
 
-    # ============================================
-    # LOOP
-    # ============================================
-    while True:
-
-        # leitura sensores
-        bme = read_bme280()
-        lux = read_bh1750()
-
-        if bme is not None:
-
-            temp, hum, press = bme
-
-        else:
-
-            temp = None
-            hum = None
-            press = None
-
-        # validação
-        if is_valid(
-            temp,
-            hum,
-            press,
-            lux
-        ):
-
-            if temp is not None:
-                m_temp.append(temp)
-
-            if hum is not None:
-                m_hum.append(hum)
-
-            if press is not None:
-                m_press.append(press)
-
-            if lux is not None:
-                m_lux.append(lux)
+    try:
 
         # ============================================
-        # SALVA A CADA 5 MINUTOS
+        # LOOP
         # ============================================
-        if time.time() - last_send >= 300:
+        while True:
 
-            has_data = any([
-                m_temp,
-                m_hum,
-                m_press,
-                m_lux
-            ])
+            # leitura sensores
+            bme = read_bme280()
+            lux = read_bh1750()
 
-            if has_data:
+            if bme is not None:
 
-                avg_temp = (
-                    round(statistics.mean(m_temp), 2)
-                    if m_temp else None
-                )
-
-                avg_hum = (
-                    round(statistics.mean(m_hum), 2)
-                    if m_hum else None
-                )
-
-                if avg_hum == 100.0 and is_suspicious_humidity(m_hum):
-
-                    logging.warning(
-                        "Possível umidade travada em 100%. "
-                        "A leitura de umidade do período não será gravada."
-                    )
-
-                    avg_hum = None
-
-                avg_press = (
-                    round(statistics.mean(m_press), 2)
-                    if m_press else None
-                )
-
-                avg_lux = (
-                    round(statistics.mean(m_lux), 2)
-                    if m_lux else None
-                )
-
-                current_data = (
-                    avg_temp,
-                    avg_hum,
-                    avg_press,
-                    avg_lux
-                )
-
-                # ============================================
-                # EVITA DUPLICADOS
-                # ============================================
-                if last_saved_data == current_data:
-
-                    logging.info(
-                        "Dados repetidos. Ignorando salvamento no SQLite."
-                    )
-
-                else:
-
-                    try:
-
-                        save_to_sqlite(
-                            rcID,
-                            avg_temp,
-                            avg_hum,
-                            avg_press,
-                            avg_lux
-                        )
-
-                        last_saved_data = current_data
-
-                        logging.info(
-                            f"Dados salvos no SQLite: "
-                            f"T={avg_temp} "
-                            f"H={avg_hum} "
-                            f"P={avg_press} "
-                            f"L={avg_lux}"
-                        )
-
-                    except Exception as e:
-
-                        logging.error(
-                            f"Erro ao salvar no SQLite: {e}"
-                        )
-
-                # ============================================
-                # TENTA SINCRONIZAR COM O MARIADB
-                # ============================================
-                sync_sqlite_to_mariadb()
+                temp, hum, press = bme
 
             else:
 
-                logging.warning(
-                    "Nenhuma leitura válida nos últimos 5 minutos."
+                temp = None
+                hum = None
+                press = None
+
+            # validação
+            if is_valid(
+                temp,
+                hum,
+                press,
+                lux
+            ):
+
+                if temp is not None:
+                    m_temp.append(temp)
+
+                if hum is not None:
+                    m_hum.append(hum)
+
+                if press is not None:
+                    m_press.append(press)
+
+                if lux is not None:
+                    m_lux.append(lux)
+
+            # ============================================
+            # SALVA A CADA 5 MINUTOS
+            # ============================================
+            if time.time() - last_send >= 300:
+
+                with rain_lock:
+                    pulses_since_last_save = rain_pulse_count
+                    rain_pulse_count = 0
+
+                rain_mm = (
+                    round(pulses_since_last_save * RAIN_MM_PER_PULSE, 3)
+                    if pulses_since_last_save > 0
+                    else 0.0
                 )
 
-            # limpa buffers
-            m_temp.clear()
-            m_hum.clear()
-            m_press.clear()
-            m_lux.clear()
+                has_data = any([
+                    m_temp,
+                    m_hum,
+                    m_press,
+                    m_lux,
+                    pulses_since_last_save > 0
+                ])
 
-            last_send = time.time()
+                if has_data:
 
-        time.sleep(10)
+                    avg_temp = (
+                        round(statistics.mean(m_temp), 2)
+                        if m_temp else None
+                    )
+
+                    avg_hum = (
+                        round(statistics.mean(m_hum), 2)
+                        if m_hum else None
+                    )
+
+                    if avg_hum == 100.0 and is_suspicious_humidity(m_hum):
+
+                        logging.warning(
+                            "Possível umidade travada em 100%. "
+                            "Mantendo valor de 100% por ser mais próximo da realidade atual."
+                        )
+
+                    avg_press = (
+                        round(statistics.mean(m_press), 2)
+                        if m_press else None
+                    )
+
+                    avg_lux = (
+                        round(statistics.mean(m_lux), 2)
+                        if m_lux else None
+                    )
+
+                    current_data = (
+                        avg_temp,
+                        avg_hum,
+                        avg_press,
+                        avg_lux,
+                        rain_mm
+                    )
+
+                    # ============================================
+                    # EVITA DUPLICADOS
+                    # ============================================
+                    if last_saved_data == current_data:
+
+                        logging.info(
+                            "Dados repetidos. Ignorando salvamento no SQLite."
+                        )
+
+                    else:
+
+                        try:
+
+                            save_to_sqlite(
+                                rcID,
+                                avg_temp,
+                                avg_hum,
+                                avg_press,
+                                avg_lux,
+                                rain_mm
+                            )
+
+                            last_saved_data = current_data
+
+                            logging.info(
+                                f"Dados salvos no SQLite: "
+                                f"T={avg_temp} "
+                                f"H={avg_hum} "
+                                f"P={avg_press} "
+                                f"L={avg_lux} "
+                                f"Pluv={rain_mm}"
+                            )
+
+                        except Exception as e:
+
+                            logging.error(
+                                f"Erro ao salvar no SQLite: {e}"
+                            )
+
+                    # ============================================
+                    # TENTA SINCRONIZAR COM O MARIADB
+                    # ============================================
+                    sync_sqlite_to_mariadb()
+
+                else:
+
+                    logging.warning(
+                        "Nenhuma leitura válida nos últimos 5 minutos."
+                    )
+
+                # limpa buffers
+                m_temp.clear()
+                m_hum.clear()
+                m_press.clear()
+                m_lux.clear()
+
+                last_send = time.time()
+
+            time.sleep(10)
+
+    finally:
+
+        if HAS_GPIO and HAS_RAIN_GAUGE:
+            GPIO.cleanup()
 
 
 if __name__ == "__main__":

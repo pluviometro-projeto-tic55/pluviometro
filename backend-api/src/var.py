@@ -7,6 +7,12 @@ from .services.forecast_services import calc_heat_index, calc_cloudiness
 from .var_data import prepare_var_data
 from .models import Forecast
 from .database import db
+
+
+def _clamp_non_negative(value):
+    if value is None or pd.isna(value):
+        return None
+    return max(float(value), 0.0)
 # define o diretório para salvar os modelos .pkl
 MODEL_DIR = os.path.join(os.path.dirname(__file__), 'model_store')
 
@@ -89,6 +95,20 @@ def _generate_forecast_data(rc_id):
         print(f"[VAR] No recent data available for Station {rc_id}.")
         return None
 
+    # Compatibilidade de esquema: se o modelo salvo foi treinado com colunas antigas,
+    # retreina para alinhar com o dataframe atual.
+    model_columns = list(df_recent.columns)
+    model_names = list(getattr(results, "names", []))
+    if model_names and model_names != model_columns:
+        print(
+            f"[VAR] Model schema mismatch for Station {rc_id}. "
+            f"Model={model_names} Data={model_columns}. Retraining..."
+        )
+        results = train_and_save_model(rc_id)
+        if results is None:
+            print(f"[VAR] Retraining failed for Station {rc_id} after schema mismatch.")
+            return None
+
     # checa se tem dados suficientes para a quantidade de lags que o modelo selecionou
     lag_order = results.k_ar
     if len(df_recent) < lag_order:
@@ -123,7 +143,8 @@ def _generate_forecast_data(rc_id):
             'humidity': 'mean',
             'wind_speed': 'mean',
             'lux': 'mean',
-            'pressure': 'mean'
+            'pressure': 'mean',
+            'pluv': 'mean',
         }
         
         # Usamos df_combined ao invés de df_forecast para incluir o dia atual completo
@@ -151,7 +172,12 @@ def _generate_forecast_data(rc_id):
                 "max_temp": round(row[('temp', 'max')], 1),
                 "heat_index": round(heat_index, 1),
                 "cloudiness": round(cloudiness, 1),
-                "avg_wind_speed": round(row[('wind_speed', 'mean')], 1)
+                "avg_wind_speed": round(row[('wind_speed', 'mean')], 1),
+                "rain_mm": (
+                    round(_clamp_non_negative(row[('pluv', 'mean')]), 2)
+                    if pd.notna(row[('pluv', 'mean')])
+                    else None
+                ),
             })
             
         # cria dict pra 'hourly forecast'
@@ -172,7 +198,12 @@ def _generate_forecast_data(rc_id):
                 "humidity": round(row['humidity'], 2),
                 "pressure": round(row['pressure'], 2),
                 "wind_speed": round(row['wind_speed'], 2),
-                "lux": round(row['lux'], 2) if 'lux' in row else 0
+                "lux": round(row['lux'], 2) if 'lux' in row else 0,
+                "rain_mm": (
+                    round(_clamp_non_negative(row['pluv']), 2)
+                    if 'pluv' in row and pd.notna(row['pluv'])
+                    else None
+                ),
             })
 
         # Converte o dicionário agrupado para uma lista estruturada
@@ -223,6 +254,8 @@ def save_forecast_to_db(rc_id, forecast_data):
                 record.c_pressure = get_valid(hour_data.get('pressure'))
                 record.c_wind_speed = get_valid(hour_data.get('wind_speed'))
                 record.c_lux = get_valid(hour_data.get('lux'))
+                forecast_rain = get_valid(hour_data.get('rain_mm'))
+                record.c_pluv = max(forecast_rain, 0.0) if forecast_rain is not None else None
                 
                 if daily_info:
                     record.temp_min = int(daily_info.get('min_temp', 0))

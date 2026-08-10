@@ -38,6 +38,7 @@ def prepare_var_data(rc_id, days=365):
         'pressure': record.pressure,
         'lux': record.lux,
         'wind_speed': record.wind_speed,
+        'pluv': record.pluv,
     } for record in records]
 
 

@@ -22,6 +22,7 @@ def get_historical_hourly_average(rc_id, start_date, end_date, variable):
     if end > date.today():
         end = date.today()
 
+    # Mapeia variável para coluna do banco
     try:
         result = db.session.execute(
             text("CALL sp_graphicdata(:rc_id, :start, :end, :variable)"),
@@ -43,11 +44,13 @@ def get_historical_hourly_average(rc_id, start_date, end_date, variable):
         {
             "day": row[0].strftime("%Y-%m-%d"),
             "avgHour": int(row[1]),
-            variable: float(row[2])
+            variable: (
+                # Substitua o valor abaixo pela chamada da sua API externa caso a umidade seja 100
+                float(row[2]) if (variable != 'humidity' or float(row[2]) != 100) else float(row[2]) 
+            ) if row[2] is not None else None
         }
         for row in rows
     ]
-
 
 # Buscar e normalizar dados
 def get_historical_variable_data(rc_id, variable, start_date, end_date):

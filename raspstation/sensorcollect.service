@@ -4,6 +4,7 @@ After=network-online.target
 
 [Service]
 User=INSTALL_USER
+EnvironmentFile=-/home/INSTALL_USER/.config/station/sensorcollect.env
 ExecStart=/usr/bin/python3 /home/INSTALL_USER/.config/station/sensorscript.py
 Restart=always
 RestartSec=5

@@ -23,9 +23,9 @@ export function transformForecastData(backendData) {
           temperature: Math.round(val),
           heat_index: dayItem.heat_index,
           wind_speed: dayItem.avg_wind_speed,
-          humidity: dayItem.humidity || 0,
-          pressure: dayItem.pressure || 0,
-          rain: dayItem.rain || 0
+          humidity: dayItem.humidity ?? 0,
+          pressure: dayItem.pressure ?? 0,
+          rain: dayItem.rain_mm ?? dayItem.rain ?? 0
         });
       }
       transformed[dayItem.date] = hours;
