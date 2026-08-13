@@ -66,6 +66,8 @@ def get_historical_variable_data(rc_id, variable, start_date, end_date):
         "humidity": RaspData.humidity,
         "pressure": RaspData.pressure,
         "wind_speed": RaspData.wind_speed,
+        "rain": RaspData.pluv,
+        "rain_mm": RaspData.pluv,
     }
 
     selected_column = column_mapping.get(variable)
@@ -164,4 +166,3 @@ def export_historical_variable_csv(rc_id, variable, start_date, end_date):
     filename = f"{safe_station}_{safe_variable}_{start_date}_{end_date}.csv"
 
     return csv_data, filename
-
