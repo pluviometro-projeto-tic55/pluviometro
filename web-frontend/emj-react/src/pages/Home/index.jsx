@@ -11,6 +11,7 @@ import { useWeatherUpdates } from "../../hooks/useWeatherUpdates";
 import { useForecastData } from "../../hooks/useForecastData";
 
 import { useDetailsData } from "../../hooks/useDetailsData";
+import { useExternalCurrentData } from "../../hooks/useExternalCurrentData/useExternalCurrentData";
 import { useStation } from "../../context/StationContext.jsx";
 import { transformWeatherData } from "../../utils/transformWeather";
 import ErrorMessage from "../../components/ErrorMessage/ErrorMessage.jsx";
@@ -33,8 +34,18 @@ export default function Home() {
   }, [rawForecast]);
 
   const { data, loading, error } = useDetailsData(stationId);
+  const { data: externalData } = useExternalCurrentData(stationId);
 
-  const weatherData = weatherFromSocket ?? data;
+  const weatherData = useMemo(() => {
+    const baseWeather = weatherFromSocket ?? data;
+    if (!baseWeather) return null;
+
+    return {
+      ...baseWeather,
+      external_rain_mm: externalData?.external_rain_mm ?? 0,
+    };
+  }, [weatherFromSocket, data, externalData]);
+
   const isLoading = stationsLoading || !selectedStation || loading || forecastLoading;
 
   if (error || forecastError) {

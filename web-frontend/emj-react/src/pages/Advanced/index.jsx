@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import Navbar from "../../components/UI/Navbar";
 import Footer from "../../components/UI/Footer";
@@ -14,6 +14,7 @@ import { forecastVariables } from "../../config/forecastVariables";
 import { useForecastData } from "../../hooks/useForecastData";
 import { useWeatherUpdates } from "../../hooks/useWeatherUpdates";
 import { useDetailsData } from "../../hooks/useDetailsData";
+import { useExternalCurrentData } from "../../hooks/useExternalCurrentData/useExternalCurrentData";
 import { transformForecastData } from "../../utils/transformForecast";
 import { useStation } from "../../context/StationContext";
 import ErrorMessage from "../../components/ErrorMessage/ErrorMessage";
@@ -30,8 +31,18 @@ function Advanced() {
   const chartData = transformForecastData(rawForecast || {});
 
   const { data, loading, error } = useDetailsData(stationId);
+  const { data: externalData } = useExternalCurrentData(stationId);
 
-  const weatherData = weatherFromSocket ?? data;
+  const weatherData = useMemo(() => {
+    const baseWeather = weatherFromSocket ?? data;
+    if (!baseWeather) return null;
+
+    return {
+      ...baseWeather,
+      external_rain_mm: externalData?.external_rain_mm ?? 0,
+    };
+  }, [weatherFromSocket, data, externalData]);
+
   const isLoading = stationsLoading || !selectedStation || loading || forecastLoading;
 
   if (error || forecastError) {

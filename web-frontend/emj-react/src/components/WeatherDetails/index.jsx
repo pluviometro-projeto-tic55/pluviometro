@@ -72,30 +72,26 @@ export default function WeatherDetails({ weather, loading }) {
 
     },
 
-    {
-
+   {
       title: "Chuva",
-
-      value: `${Math.round(weather?.rain_mm ?? 0)} mm`,
-
-      description: "Milímetros acumulados",
-
+      value: (() => {
+        // Lógica de fallback: usa external_rain_mm se o valor local for 0 ou nulo
+        const isExternalRainActive = (!weather?.rain_mm || weather.rain_mm === 0) && weather?.external_rain_mm != null && weather.external_rain_mm > 0;
+        const currentRain = isExternalRainActive ? weather.external_rain_mm : (weather?.rain_mm ?? 0);
+        return `${Math.round(currentRain)} mm`;
+      })(),
+      description: (() => {
+        const isExternalRainActive = (!weather?.rain_mm || weather.rain_mm === 0) && weather?.external_rain_mm != null && weather.external_rain_mm > 0;
+        return isExternalRainActive ? "Precipitação Acumulada" : "Milímetros acumulados";
+      })(),
       icon: (
-
         <CloudRain
-
           className="w-5 h-5 3xl:w-8 3xl:h-8"
-
           color={"var(--text-900)"}
-
         />
-
       ),
-
     },
-
-  ]; // <--- Faltava este fechamento de array
-
+  ]; 
 
 
   return (
