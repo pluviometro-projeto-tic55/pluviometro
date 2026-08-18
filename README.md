@@ -116,13 +116,21 @@ Cada basculada movimenta um ímã que aciona um reed switch. O Raspberry Pi dete
 
 O pluviômetro não utiliza o barramento I2C dos sensores herdados. Sua leitura ocorre por entrada digital GPIO.
 
-Consulte também [README_PLUVIOMETRO.md](README_PLUVIOMETRO.md) para a documentação específica do subsistema de chuva.
+Consulte também [README do pluviômetro](docs/README_Pluviometro.md) para a documentação específica do subsistema de chuva.
 
 ## Coleta e agregação dos dados
 
-O coletor atual realiza leituras periódicas dos sensores e mantém buffers temporários para calcular médias antes da persistência.
+O coletor atual lê BME280 e BH1750 em ciclos de aproximadamente **10 segundos** e mantém buffers temporários para calcular as médias de temperatura, umidade, pressão e luminosidade.
 
-A gravação é realizada em ciclos de aproximadamente **5 minutos**. Para a chuva, os pulsos detectados nesse período são acumulados e convertidos para milímetros antes do salvamento.
+O pluviômetro funciona de forma assíncrona: cada pulso detectado no GPIO incrementa um contador protegido por `threading.Lock`.
+
+A cada aproximadamente **5 minutos (300 segundos)**, o sistema:
+
+1. obtém e zera o contador de pulsos do pluviômetro;
+2. converte os pulsos acumulados em milímetros;
+3. calcula as médias dos demais sensores;
+4. grava o registro no SQLite;
+5. tenta sincronizar os registros pendentes com o MariaDB.
 
 O arquivo SQLite utilizado pelo coletor atual é:
 
@@ -156,25 +164,31 @@ Para a instalação do pluviômetro descrita neste projeto:
 
 ```text
 RAIN_GPIO_PIN=17
+RAIN_MM_PER_PULSE=0.29205
 ```
+
+`RAIN_GPIO_PIN` **não está fixado diretamente no código**. Se essa variável não estiver definida com um número válido, o coletor mantém o pluviômetro desativado.
 
 ### Atenção à calibração
 
-Os materiais de calibração do projeto registram aproximadamente **0,29205 mm por basculada** para a geometria utilizada. O código atual possui `0.297` como valor de fallback quando `RAIN_MM_PER_PULSE` não é configurado.
+Os materiais de calibração do projeto registram aproximadamente **0,29205 mm por basculada** para a geometria utilizada. O código atual possui `0.297` como valor de fallback quando `RAIN_MM_PER_PULSE` não é configurado ou não pode ser convertido corretamente.
 
-Antes de colocar a estação em operação definitiva, defina explicitamente `RAIN_MM_PER_PULSE` com o valor de calibração adotado pela equipe e mantenha o mesmo valor na documentação e no código.
+Para reproduzir a calibração documentada pela equipe, defina explicitamente `RAIN_MM_PER_PULSE=0.29205`. Se a geometria da área de captação for alterada, esse fator deve ser recalculado e validado novamente.
 
 ## Instalação do software no Raspberry Pi
 
-Os documentos mais recentes do sistema herdado descrevem um instalador automatizado. A versão documentada utiliza os seguintes arquivos na mesma pasta:
+Os documentos mais recentes do sistema herdado descrevem um instalador automatizado. O manual mais recente cita `installstation_v6.sh` e o coletor atual utiliza `sensorscript.py`. Os materiais de serviço também apontam para a execução desse script pelo `systemd`.
+
+Os nomes dos arquivos variam entre versões da documentação. Foram encontrados, por exemplo:
 
 ```text
 installstation_v6.sh
 sensorscript.py
 sensorcollect.service
+raspcollect.service
 ```
 
-> **Nota de compatibilidade:** materiais anteriores utilizam nomes como `installstation_v01.sh`, `installstation_v03.sh`, `sensor_v01.py` e `raspcollect.service`. Utilize sempre os nomes presentes na versão atual do repositório.
+> **Nota de compatibilidade:** antes da instalação, utilize os nomes que realmente estiverem presentes na versão atual do repositório. Não renomeie o serviço apenas com base em documentação antiga.
 
 ### Procedimento geral
 
@@ -210,11 +224,26 @@ O instalador herdado solicita informações como:
 
 ### Compatibilidade com o coletor atual
 
-Versões antigas do instalador foram documentadas como responsáveis por inserir as credenciais diretamente no script Python. O `sensorscript.py` atual, entretanto, lê as configurações do banco por **variáveis de ambiente**.
+Versões antigas do instalador foram documentadas como responsáveis por inserir as credenciais diretamente no script Python. O `sensorscript.py` atual, entretanto, lê as configurações do banco por **variáveis de ambiente**:
 
-Portanto, ao reutilizar o instalador herdado, confira se a versão atual foi adaptada para fornecer `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS` e `DB_NAME` ao serviço. Caso contrário, o instalador e o serviço precisam ser ajustados antes da implantação.
+```text
+DB_HOST
+DB_PORT
+DB_USER
+DB_PASS
+DB_NAME
+```
 
-O mesmo vale para `RAIN_GPIO_PIN` e `RAIN_MM_PER_PULSE` quando o pluviômetro estiver instalado.
+O mesmo ocorre com:
+
+```text
+RAIN_GPIO_PIN
+RAIN_MM_PER_PULSE
+```
+
+Portanto, ao reutilizar o instalador herdado, confira se o serviço instalado recebe essas variáveis. Caso contrário, o instalador e/ou a unidade `systemd` precisam ser adaptados antes da implantação.
+
+O `rcID` não é lido do ambiente: ele é obtido do arquivo `~/.config/station/rcid.txt`.
 
 ## Serviço de coleta
 
@@ -229,12 +258,14 @@ RestartSec=5
 
 Assim, se o script for encerrado inesperadamente, o `systemd` tenta iniciá-lo novamente após alguns segundos.
 
-Como o nome da unidade varia entre versões dos documentos, primeiro confirme o nome do arquivo presente no repositório. Exemplos encontrados na documentação:
+Como o nome da unidade varia entre versões dos documentos, primeiro confirme o nome do arquivo presente no repositório. Foram encontrados:
 
 ```text
 sensorcollect.service
 raspcollect.service
 ```
+
+Substitua `NOME_DO_SERVICO` pelo nome realmente instalado.
 
 Para verificar o serviço:
 
@@ -242,19 +273,46 @@ Para verificar o serviço:
 sudo systemctl status NOME_DO_SERVICO.service
 ```
 
-Para acompanhar os logs:
+Para acompanhar os logs em tempo real:
 
 ```bash
 journalctl -u NOME_DO_SERVICO.service -f
 ```
 
+Esses logs também registram eventos do pluviômetro, erros de sensores, falhas de sincronização e salvamentos no SQLite.
+
 ## Banco de dados
 
 O sistema utiliza MariaDB/MySQL como banco principal. A estrutura herdada contém, entre outras, as tabelas `raspclient` e `raspdata`.
 
-Nesta etapa do projeto não foi realizada uma remodelagem geral do banco; a integração do pluviômetro utiliza o fluxo de persistência já existente na estação.
+Nesta etapa não foi realizada uma remodelagem geral do banco de dados. O coletor atual espera que `raspdata` aceite os campos meteorológicos utilizados pelo sistema, incluindo `Pluv` para precipitação.
 
 O SQLite local não substitui o MariaDB. Ele funciona como buffer para preservar medições até que a sincronização com o banco principal possa ser concluída.
+
+A tabela local `buffer_raspdata` contém:
+
+- `rcID`;
+- `Temp`;
+- `Humidity`;
+- `Pressure`;
+- `Lux`;
+- `Pluv`;
+- `created_at`.
+
+Os registros são enviados ao MariaDB em ordem de criação e removidos do SQLite somente depois que o `INSERT` é confirmado.
+
+## Observações técnicas do coletor atual
+
+Alguns comportamentos da versão atual são importantes para manutenção e implantação:
+
+- o script encerra na inicialização caso **BME280 e BH1750 não sejam detectados ao mesmo tempo**; portanto, a versão atual do coletor pressupõe a presença de pelo menos um desses sensores herdados;
+- a verificação de conectividade utiliza uma tentativa de conexão com `8.8.8.8` na porta `53` antes da sincronização. Assim, o teste representa disponibilidade de internet, e não apenas disponibilidade do servidor MariaDB;
+- o coletor evita salvar um registro quando todos os valores calculados são exatamente iguais ao registro anterior (`last_saved_data`);
+- o SQLite registra `created_at`, porém a rotina atual de `INSERT` no MariaDB envia `rcID`, `Temp`, `Humidity`, `Pressure`, `Lux` e `Pluv`, sem encaminhar explicitamente o `created_at` do buffer;
+- o contador de pulsos de chuva é lido e zerado no início de cada janela de 5 minutos, antes da tentativa de persistência;
+- erros de leitura do BME280, BH1750, SQLite ou MariaDB são registrados no log para facilitar o diagnóstico.
+
+Esses pontos descrevem o comportamento do código atual e podem ser alterados em evoluções futuras.
 
 ## Instalação física
 
@@ -278,15 +336,11 @@ Na instalação de referência, o pluviômetro automático foi fixado em uma tam
 
 A instalação física no telhado foi realizada pela equipe de manutenção do colégio.
 
-![Instalação do pluviômetro no telhado](docs/images/instalacao-telhado-joao-xxiii.jpeg)
-
 ## Validação manual e uso didático
 
 Além do pluviômetro automático, o projeto utiliza um **pluviômetro manual Incoterm** como referência visual.
 
 A proposta é permitir a comparação entre a leitura manual e a medição automática, inclusive em atividades didáticas com os alunos.
-
-![Pluviômetro manual de referência](docs/images/pluviometro-manual-incoterm.jpeg)
 
 ## Projeto de baixo custo
 
@@ -315,4 +369,3 @@ Projeto desenvolvido no âmbito da Residência em TIC 55 — BRISA / UNISINOS.
 - Integrante 3
 - Integrante 4
 - Integrante 5
-
