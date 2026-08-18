@@ -12,8 +12,7 @@ O projeto é desenvolvido em etapas independentes e complementares:
 2. **Integração do pluviômetro:** inclusão de medição física de precipitação, tratamento dos pulsos no Raspberry Pi, armazenamento dos dados de chuva e mecanismos de tolerância a falhas.
 3. **Integração de anemômetro:** etapa posterior, iniciada por outra equipe, destinada à medição local do vento.
 
-O Colégio João XXIII disponibilizou o ambiente para testes e instalação de uma das estações e prestou apoio por meio de sua equipe de manutenção. A instituição, porém, **não é a idealizadora do projeto**; sua infraestrutura foi utilizada como ambiente de aplicação e validação.
-
+O Colégio João XXIII disponibilizou o ambiente para testes e instalação de uma das estações e prestou apoio por meio de sua equipe de manutenção.
 ## Objetivo
 
 Disponibilizar uma estação meteorológica de baixo custo, modular e expansível, capaz de:
