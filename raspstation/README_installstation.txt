@@ -52,5 +52,3 @@ Durante a instalação, o script fará as seguintes perguntas:
 Credenciais do Banco: IP, Usuário, Senha e Nome do Banco de Dados.
 
 Informações da Estação: Nome, Latitude, Longitude, Altitude, Local, Email e Contato.
-
-Configuração opcional do pluviômetro: GPIO BCM usado pelo sensor de chuva e milímetros por pulso. O valor padrão é 0,297 mm por pulso. Se o GPIO for deixado em branco, o contador de chuva fica desativado e o restante dos sensores continua funcionando.
