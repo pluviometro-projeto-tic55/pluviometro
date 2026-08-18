@@ -357,14 +357,4 @@ Os seguintes materiais descrevem partes importantes da primeira etapa da estaç�
 - `README_installstation.txt` — funcionamento do instalador;
 - `README_sensorcollectservice.txt` — funcionamento do serviço `systemd`.
 
-## Equipe
 
-Projeto desenvolvido no âmbito da Residência em TIC 55 — BRISA / UNISINOS.
-
-### Equipe da etapa do pluviômetro
-
-- Integrante 1
-- Integrante 2
-- Integrante 3
-- Integrante 4
-- Integrante 5
