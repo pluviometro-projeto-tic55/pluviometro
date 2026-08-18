@@ -251,7 +251,7 @@ O projeto do suporte deve evitar represamento, retorno de água ou acúmulo que 
 
 ## Instalação de referência — Colégio João XXIII
 
-O Colégio João XXIII ofereceu o local para testes e apoio de sua equipe de manutenção. A escola **não foi a idealizadora do projeto**.
+O Colégio João XXIII ofereceu o local para testes e apoio de sua equipe de manutenção.
 
 A instalação realizada no colégio foi adaptada ao prédio e ao ponto disponível no telhado.
 
