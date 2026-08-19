@@ -6,6 +6,10 @@ Projeto de estação meteorológica de baixo custo para coleta, armazenamento, p
 
 A solução foi construída de forma evolutiva. A primeira etapa implementou a estação meteorológica base; a etapa atual acrescenta a medição física de precipitação por meio de um pluviômetro basculante e melhorias de confiabilidade no sistema de coleta.
 
+## Vídeo do sistema
+
+Acesse o vídeo do sistema clickando no link https://drive.google.com/file/d/1zcjkqF9UZOJVbYBbB_zlaw-r_4kkmNvD/view?usp=sharing
+
 ## Contexto do projeto
 
 O projeto é desenvolvido em etapas independentes e complementares:
